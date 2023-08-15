@@ -6,19 +6,20 @@ type User struct {
 }
 
 type UserClient interface {
-	NewUser(user User) User
-	GetUserInfo(userId int64) User
+	NewUser(user *User) *User
+	GetUserInfo(userId int64) *User
 }
 
 type UserClientHandler struct {
+	Client UserClient
 }
 
-func (client *UserClientHandler) NewUser(user User) User {
+func (u UserClientHandler) NewUser(user *User) *User {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (client *UserClientHandler) GetUserInfo(userId int64) User {
+func (u UserClientHandler) GetUserInfo(userId int64) *User {
 	//TODO implement me
 	panic("implement me")
 }
