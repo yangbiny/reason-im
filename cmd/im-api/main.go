@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"reason-im/internal/api"
-	"reason-im/internal/utils"
+	"reason-im/internal/utils/logger"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func start() error {
 
 	err := router.Run("0.0.0.0:1080")
 	if err != nil {
-		utils.Warn(context.Background(), "api run failed", err)
+		logger.utils.Warn(context.Background(), "api run failed", err)
 		return err
 	}
 	return nil

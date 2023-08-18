@@ -1,6 +1,9 @@
-package utils
+package caller
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"reason-im/internal/utils/logger"
+)
 
 func Call[A, B any](
 	function func(req *A) *B,
@@ -8,7 +11,7 @@ func Call[A, B any](
 	req *A,
 ) {
 	if err := c.BindJSON(&req); err != nil {
-		Warn(c, "bind req has failed", "req", req)
+		logger.Warn(c, "bind req has failed", "req", req)
 		return
 	}
 	data := function(req)
