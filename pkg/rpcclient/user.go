@@ -1,6 +1,7 @@
 package rpcclient
 
 import (
+	"context"
 	"reason-im/internal/config/mysql"
 )
 
@@ -20,7 +21,8 @@ type UserClientHandler struct {
 }
 
 func (u UserClientHandler) NewUser(user *User) *User {
-
+	connection := mysql.GetConnection(context.Background())
+	connection.Close()
 	panic("implement me")
 }
 

@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"reason-im/internal/utils"
+	"reason-im/internal/utils/caller"
 	"reason-im/pkg/rpcclient"
 )
 
@@ -16,5 +16,5 @@ func NewUserApi() UserApi {
 
 func (api *UserApi) RegisterNewUser(c *gin.Context) {
 	var user rpcclient.User
-	utils.Call(api.Client.NewUser, c, &user)
+	caller.Call(api.Client.NewUser, c, &user)
 }

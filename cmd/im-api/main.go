@@ -1,3 +1,6 @@
+//go:generate go run main.go
+
+//go:network
 package main
 
 import (
@@ -18,7 +21,7 @@ func start() error {
 
 	err := router.Run("0.0.0.0:1080")
 	if err != nil {
-		logger.utils.Warn(context.Background(), "api run failed", err)
+		logger.Warn(context.Background(), "api run failed", err)
 		return err
 	}
 	return nil
