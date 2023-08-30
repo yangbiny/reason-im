@@ -2,4 +2,4 @@ mysql:
   im:
     username: adm
     password: oK1@cM2]dB2!
-    url: tcp(10.200.68.3:3306)/fafa?characterEncoding=utf-8
+    url: tcp(10.200.68.3:3306)/fafa
