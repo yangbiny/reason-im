@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"reason-im/internal/config/mysql"
 	"reason-im/internal/utils/logger"
+	"time"
 )
 
 var tableName = "im_user"
 
 type User struct {
-	Id   int64
-	Name string
+	Id        int64     `db:"id"`
+	Name      string    `db:"name"`
+	GmtCreate time.Time `db:"gmt_create"`
+	GmtUpdate time.Time `db:"gmt_update"`
 }
 
 type UserClient interface {
@@ -27,9 +30,13 @@ func (u UserClientHandler) NewUser(user *User) *User {
 	ctx := context.Background()
 	connection := mysql.GetConnection(ctx)
 	defer mysql.CloseMysqlConn(connection, ctx)
-	var sqlStr = fmt.Sprintf("insert into %s (name) values (?)", tableName)
-	prepareContext, _ := connection.PrepareContext(ctx, sqlStr)
-	result, err := prepareContext.Exec(user.Name)
+	var sqlStr = fmt.Sprintf("insert into %s (name,gmt_create,gmt_update) values (?,?,?)", tableName)
+	prepareContext, err := connection.PrepareContext(ctx, sqlStr)
+	if err != nil {
+		panic(err)
+	}
+	date := time.Now()
+	result, err := prepareContext.Exec(user.Name, date, date)
 	if err != nil {
 		logger.Error(ctx, "execute sql has failed", "sql", sqlStr, "username", user.Name)
 		panic("execute has failed")
@@ -42,6 +49,17 @@ func (u UserClientHandler) NewUser(user *User) *User {
 }
 
 func (u UserClientHandler) GetUserInfo(userId int64) *User {
-	//TODO implement me
-	panic("implement me")
+	ctx := context.Background()
+	connection := mysql.GetConnection(ctx)
+	sql := fmt.Sprintf("select * from %s where id = ?", tableName)
+	queryContext, err := connection.QueryContext(ctx, sql, userId)
+	if err != nil {
+		panic(err)
+	}
+	if !queryContext.Next() {
+		return nil
+	}
+	var user = &User{}
+	mysql.RenderResult(queryContext, user)
+	return user
 }
