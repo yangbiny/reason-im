@@ -20,7 +20,7 @@ func init() {
 	db, err = sql.Open("mysql", mysqlUrl)
 	if err != nil {
 		logger.Error(nil, "db mysql has failed", err)
-		panic("db mysql has failed ")
+		panic(err)
 	}
 	db.SetConnMaxIdleTime(10)
 	db.SetMaxOpenConns(100)
@@ -30,7 +30,7 @@ func GetConnection(ctx context.Context) *sql.Conn {
 	conn, err := db.Conn(ctx)
 	if err != nil {
 		logger.Error(ctx, "get mysql conn has failed", err)
-		panic("get mysql conn has failed")
+		panic(err)
 	}
 	return conn
 }
@@ -90,7 +90,7 @@ func setValue(field reflect.Value, value interface{}, valueType *sql.ColumnType)
 			t, err = time.Parse("2006-01-02 15:04:05", string(value.([]byte)))
 			if err != nil {
 				logger.Error(nil, "时间解析错误", "时间：", string(value.([]byte)))
-				panic("时间解析错误")
+				panic(err)
 			}
 		}
 		field.Set(reflect.ValueOf(t))
