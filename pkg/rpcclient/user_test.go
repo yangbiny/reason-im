@@ -31,7 +31,7 @@ func TestUserClientHandler_NewUser1(t *testing.T) {
 			},
 			args: args{
 				user: &User{
-					Name: "用户名称",
+					Name: "用户名称2",
 				},
 			},
 		},

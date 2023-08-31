@@ -11,10 +11,10 @@ import (
 var tableName = "im_user"
 
 type User struct {
-	Id        int64     `db:"id"`
-	Name      string    `db:"name"`
-	GmtCreate time.Time `db:"gmt_create"`
-	GmtUpdate time.Time `db:"gmt_update"`
+	Id        int64     `mysql:"id"`
+	Name      string    `mysql:"name"`
+	GmtCreate time.Time `mysql:"gmt_create"`
+	GmtUpdate time.Time `mysql:"gmt_update"`
 }
 
 type UserClient interface {
@@ -35,7 +35,7 @@ func (u UserClientHandler) NewUser(user *User) *User {
 	if err != nil {
 		panic(err)
 	}
-	date := time.Now()
+	date := time.Now().Local()
 	result, err := prepareContext.Exec(user.Name, date, date)
 	if err != nil {
 		logger.Error(ctx, "execute sql has failed", "sql", sqlStr, "username", user.Name)
@@ -60,6 +60,6 @@ func (u UserClientHandler) GetUserInfo(userId int64) *User {
 		return nil
 	}
 	var user User
-	result := mysql.RenderResult(queryContext, user).(User)
-	return &result
+	renderResult := mysql.RenderResult(queryContext, user).(User)
+	return &renderResult
 }
