@@ -59,7 +59,7 @@ func (u UserClientHandler) GetUserInfo(userId int64) *User {
 	if !queryContext.Next() {
 		return nil
 	}
-	var user = &User{}
-	mysql.RenderResult(queryContext, user)
-	return user
+	var user User
+	result := mysql.RenderResult(queryContext, user).(User)
+	return &result
 }

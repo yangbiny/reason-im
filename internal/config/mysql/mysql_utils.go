@@ -32,15 +32,10 @@ func CloseMysqlConn(conn *sql.Conn, context context.Context) {
 	}
 }
 
-func RenderResult(rows *sql.Rows, resultType interface{}) {
-	typeOf := reflect.TypeOf(resultType)
-	if typeOf.Kind() != reflect.Struct {
-		return
-	}
-	value := reflect.New(typeOf)
-	for i := 0; i < value.NumField(); i++ {
-		field := value.Field(i)
-		println(field.NumField())
+func RenderResult(rows *sql.Rows, resultType interface{}) interface{} {
+	of := reflect.TypeOf(resultType)
+	if of.Kind() != reflect.Struct {
+		panic("请传入结构体")
 	}
 	columns, _ := rows.Columns()
 	columnsSize := len(columns)
@@ -53,4 +48,17 @@ func RenderResult(rows *sql.Rows, resultType interface{}) {
 	if err != nil {
 		panic(err)
 	}
+	columnKeyIndexMap := make(map[string]int)
+	for i := range columns {
+		columnKeyIndexMap[columns[i]] = i
+	}
+	value := reflect.New(of)
+	for i := 0; i < value.NumField(); i++ {
+		field := of.Field(0)
+		columnName := field.Tag.Get("mysql")
+		index := columnKeyIndexMap[columnName]
+		columnValue := valuePointers[index]
+		value.Field(i).SetInt(columnValue.(int64))
+	}
+	return value
 }
