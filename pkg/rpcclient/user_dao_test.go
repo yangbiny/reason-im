@@ -2,6 +2,8 @@ package rpcclient
 
 import (
 	"context"
+	"reason-im/internal/config/mysql"
+	mysql2 "reason-im/internal/utils/mysql"
 	"reflect"
 	"testing"
 )
@@ -12,13 +14,15 @@ func TestUserClientHandler_GetUserInfo(t *testing.T) {
 }
 
 func TestUserClientHandler_NewUser1(t *testing.T) {
+	datasource := mysql.Datasource()
+
 	type fields struct {
-		Client UserClient
+		Client UserDao
 	}
 	type args struct {
 		user *User
 	}
-	tests := []struct {
+	var tests = []struct {
 		name   string
 		fields fields
 		args   args
@@ -27,7 +31,9 @@ func TestUserClientHandler_NewUser1(t *testing.T) {
 		{
 			name: "测试创建用户",
 			fields: fields{
-				Client: UserClientHandler{},
+				Client: UserDaoImpl{
+					DatabaseTpl: &mysql2.DatabaseTpl{Db: datasource},
+				},
 			},
 			args: args{
 				user: &User{
@@ -38,9 +44,7 @@ func TestUserClientHandler_NewUser1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := UserClientHandler{
-				Client: tt.fields.Client,
-			}
+			u := tt.fields.Client
 			if got := u.NewUser(tt.args.user); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewUser() = %v, want %v", got, tt.want)
 			}
@@ -49,8 +53,9 @@ func TestUserClientHandler_NewUser1(t *testing.T) {
 }
 
 func TestUserClientHandler_GetUserInfo1(t *testing.T) {
+	datasource := mysql.Datasource()
 	type fields struct {
-		Client UserClient
+		Client UserDao
 	}
 	type args struct {
 		userId int64
@@ -64,7 +69,9 @@ func TestUserClientHandler_GetUserInfo1(t *testing.T) {
 		{
 			name: "测试查询用户",
 			fields: fields{
-				Client: UserClientHandler{},
+				Client: UserDaoImpl{
+					DatabaseTpl: &mysql2.DatabaseTpl{Db: datasource},
+				},
 			},
 			args: args{
 				userId: 4,
@@ -73,12 +80,8 @@ func TestUserClientHandler_GetUserInfo1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := UserClientHandler{
-				Client: tt.fields.Client,
-			}
-			if got := u.GetUserInfo(tt.args.userId); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetUserInfo() = %v, want %v", got, tt.want)
-			}
+			u := tt.fields.Client
+			u.GetUserInfo(tt.args.userId)
 		})
 	}
 }

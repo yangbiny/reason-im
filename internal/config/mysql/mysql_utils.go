@@ -11,22 +11,21 @@ import (
 	"time"
 )
 
-var db *sql.DB
-
-func init() {
+func Datasource() *sql.DB {
 	mysqlConfig := config.GetImMysqlConfig()
 	mysqlUrl := fmt.Sprintf("%s:%s@%s", mysqlConfig.User, mysqlConfig.Password, mysqlConfig.Url)
 	var err error
-	db, err = sql.Open("mysql", mysqlUrl)
+	db, err := sql.Open("mysql", mysqlUrl)
 	if err != nil {
 		logger.Error(nil, "db mysql has failed", err)
 		panic(err)
 	}
 	db.SetConnMaxIdleTime(10)
 	db.SetMaxOpenConns(100)
+	return db
 }
 
-func GetConnection(ctx context.Context) *sql.Conn {
+func GetConnection(ctx context.Context, db *sql.DB) *sql.Conn {
 	conn, err := db.Conn(ctx)
 	if err != nil {
 		logger.Error(ctx, "get mysql conn has failed", err)
