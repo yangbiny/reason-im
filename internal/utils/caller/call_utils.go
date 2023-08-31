@@ -17,3 +17,16 @@ func Call[A, B any](
 	data := function(req)
 	c.JSON(200, data)
 }
+
+func CallWithParam[A, B any](
+	function func(req A) *B,
+	c *gin.Context,
+	req A,
+) {
+	data := function(req)
+	c.JSON(200, data)
+}
+
+func ResponseWithParamInvalid(c *gin.Context, msg string) {
+	c.JSON(400, msg)
+}

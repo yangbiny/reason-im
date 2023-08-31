@@ -11,10 +11,10 @@ import (
 var tableName = "im_user"
 
 type User struct {
-	Id        int64     `mysql:"id"`
-	Name      string    `mysql:"name"`
-	GmtCreate time.Time `mysql:"gmt_create"`
-	GmtUpdate time.Time `mysql:"gmt_update"`
+	Id        int64     `mysql:"id" json:"id"`
+	Name      string    `mysql:"name" json:"name"`
+	GmtCreate time.Time `mysql:"gmt_create" json:"gmt_create"`
+	GmtUpdate time.Time `mysql:"gmt_update" json:"gmt_update"`
 }
 
 type UserClient interface {

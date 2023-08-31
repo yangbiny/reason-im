@@ -7,7 +7,8 @@ func NewGinRouter() *gin.Engine {
 	userApi := NewUserApi()
 	userGroup := engine.Group("/user")
 	{
-		userGroup.POST("/register", userApi.RegisterNewUser)
+		userGroup.POST("/register/", userApi.RegisterNewUser)
+		userGroup.GET("/query/", userApi.QueryUserById)
 	}
 	return engine
 }
