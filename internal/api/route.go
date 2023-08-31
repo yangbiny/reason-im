@@ -11,13 +11,12 @@ import (
 func NewGinRouter() *gin.Engine {
 	engine := gin.New()
 	datasource := mysql.Datasource()
-	service := application.UserService{
-		UserDao: &rpcclient.UserDaoImpl{
-			DatabaseTpl: &mysql2.DatabaseTpl{
-				Db: datasource,
-			},
+	dao := &rpcclient.UserDaoImpl{
+		DatabaseTpl: &mysql2.DatabaseTpl{
+			Db: datasource,
 		},
 	}
+	service := application.NewUserService(dao)
 	userApi := NewUserApi(&service)
 	userGroup := engine.Group("/user")
 	{

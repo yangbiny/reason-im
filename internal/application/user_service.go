@@ -13,3 +13,11 @@ func NewUserService(userDao *rpcclient.UserDaoImpl) UserService {
 		UserDao: userDao,
 	}
 }
+
+func (userService UserService) NewUser(user *rpcclient.User) *rpcclient.User {
+	return userService.UserDao.NewUser(user)
+}
+
+func (userService UserService) GetUserInfo(userId int64) *rpcclient.User {
+	return userService.UserDao.GetUserInfo(userId)
+}

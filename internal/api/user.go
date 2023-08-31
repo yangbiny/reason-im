@@ -8,24 +8,26 @@ import (
 	"strconv"
 )
 
-type UserService application.UserService
+type UserApi struct {
+	userService *application.UserService
+}
 
-func NewUserApi(service *application.UserService) UserService {
-	return UserService{
-		UserDao: service.UserDao,
+func NewUserApi(service *application.UserService) UserApi {
+	return UserApi{
+		userService: service,
 	}
 }
 
-func (api *UserService) RegisterNewUser(c *gin.Context) {
+func (api *UserApi) RegisterNewUser(c *gin.Context) {
 	var user rpcclient.User
-	caller.Call(api.UserDao.NewUser, c, &user)
+	caller.Call(api.userService.NewUser, c, &user)
 }
 
-func (api *UserService) QueryUserById(c *gin.Context) {
+func (api *UserApi) QueryUserById(c *gin.Context) {
 	var userIdStr, has = c.GetQuery("id")
 	if !has {
 		caller.ResponseWithParamInvalid(c, "参数不正确")
 	}
 	userId, _ := strconv.Atoi(userIdStr)
-	caller.CallWithParam(api.UserDao.GetUserInfo, c, int64(userId))
+	caller.CallWithParam(api.userService.GetUserInfo, c, int64(userId))
 }
