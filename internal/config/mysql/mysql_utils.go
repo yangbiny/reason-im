@@ -82,10 +82,16 @@ func setValue(field reflect.Value, value interface{}, valueType *sql.ColumnType)
 	case "FLOAT":
 		field.SetFloat(value.(float64))
 	case "DATETIME", "TIMESTAMP":
-		t, err := time.Parse("2006-01-02 15:04:05", string(value.([]byte)))
-		if err != nil {
-			logger.Error(nil, "时间解析错误", "时间：", string(value.([]byte)))
-			panic("时间解析错误")
+		var t time.Time
+		if t1, ok := value.(time.Time); ok {
+			t = t1
+		} else {
+			var err error
+			t, err = time.Parse("2006-01-02 15:04:05", string(value.([]byte)))
+			if err != nil {
+				logger.Error(nil, "时间解析错误", "时间：", string(value.([]byte)))
+				panic("时间解析错误")
+			}
 		}
 		field.Set(reflect.ValueOf(t))
 	}

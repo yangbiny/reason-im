@@ -67,7 +67,7 @@ func TestUserClientHandler_GetUserInfo1(t *testing.T) {
 				Client: UserClientHandler{},
 			},
 			args: args{
-				userId: 1,
+				userId: 4,
 			},
 		},
 	}
