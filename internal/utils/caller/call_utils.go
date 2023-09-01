@@ -18,6 +18,19 @@ func Call[A, B any](
 	c.JSON(200, data)
 }
 
+func CallWithCmd[A, B any](
+	function func(req A) B,
+	c *gin.Context,
+	req A,
+) {
+	if err := c.BindJSON(&req); err != nil {
+		logger.Warn(c, "bind req has failed", "req", req)
+		return
+	}
+	data := function(req)
+	c.JSON(200, data)
+}
+
 func CallWithParam[A, B any](
 	function func(req A) *B,
 	c *gin.Context,
