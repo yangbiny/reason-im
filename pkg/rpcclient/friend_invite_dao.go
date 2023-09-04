@@ -1,8 +1,10 @@
 package rpcclient
 
-import "reason-im/internal/entity"
+import (
+	"reason-im/pkg/model"
+)
 
-type FriendInvite entity.FriendInvite
+type FriendInvite model.FriendInvite
 
 type FriendInviteDao interface {
 	NewFriend(friend *FriendInvite) *FriendInvite

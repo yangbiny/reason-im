@@ -1,15 +1,15 @@
 package rpcclient
 
 import (
-	"reason-im/internal/entity"
 	mysql2 "reason-im/internal/utils/mysql"
+	"reason-im/pkg/model"
 )
 
-type Friend entity.Friend
+type Friend model.Friend
 
 type DeleteFriendCmd struct {
 	Id     int64
-	Status entity.FriendStatus
+	Status model.FriendStatus
 }
 
 type FriendClient interface {

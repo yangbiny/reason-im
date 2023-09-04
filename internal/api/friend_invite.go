@@ -2,15 +2,15 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"reason-im/internal/application"
 	"reason-im/internal/utils/caller"
+	"reason-im/pkg/service"
 )
 
 type FriendInviteApi struct {
-	FriendService *application.FriendInviteService
+	FriendService *service.FriendInviteService
 }
 
-func NewFriendInviteApi(friendService *application.FriendInviteService) *FriendInviteApi {
+func NewFriendInviteApi(friendService *service.FriendInviteService) *FriendInviteApi {
 	return &FriendInviteApi{
 		FriendService: friendService,
 	}
@@ -21,7 +21,7 @@ func (friendInviteApi *FriendInviteApi) QueryFriendsInvite(c *gin.Context) {
 }
 
 func (friendInviteApi *FriendInviteApi) InviteFriend(c *gin.Context) {
-	var cmd application.InviteFriendCmd
+	var cmd service.InviteFriendCmd
 	caller.CallWithCmd(friendInviteApi.FriendService.InviteFriend, c, cmd)
 }
 

@@ -2,10 +2,10 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"reason-im/internal/application"
 	"reason-im/internal/config/mysql"
 	mysql2 "reason-im/internal/utils/mysql"
 	"reason-im/pkg/rpcclient"
+	"reason-im/pkg/service"
 )
 
 func NewGinRouter() *gin.Engine {
@@ -18,8 +18,8 @@ func NewGinRouter() *gin.Engine {
 			Db: datasource,
 		},
 	}
-	service := application.NewUserService(dao)
-	userApi := NewUserApi(&service)
+	userService := service.NewUserService(dao)
+	userApi := NewUserApi(&userService)
 	userGroup := engine.Group("/user")
 	{
 		userGroup.POST("/register/", userApi.RegisterNewUser)
@@ -32,8 +32,8 @@ func NewGinRouter() *gin.Engine {
 			Db: datasource,
 		},
 	}
-	inviteService := application.NewFriendInviteService(friendDao)
-	friendService := application.NewFriendService(friendDao)
+	inviteService := userService.NewFriendInviteService(friendDao)
+	friendService := userService.NewFriendService(friendDao)
 	friendApi := NewFriendApi(friendService)
 	friendInviteApi := NewFriendInviteApi(inviteService)
 	friendGroup := engine.Group("/friend")

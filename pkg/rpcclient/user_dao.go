@@ -3,12 +3,12 @@ package rpcclient
 import (
 	"context"
 	"fmt"
-	"reason-im/internal/entity"
 	mysql2 "reason-im/internal/utils/mysql"
+	"reason-im/pkg/model"
 	"time"
 )
 
-type User entity.Users
+type User model.Users
 
 var tableName = "im_user"
 
