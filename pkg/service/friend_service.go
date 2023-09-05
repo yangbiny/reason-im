@@ -10,8 +10,9 @@ type FriendService struct {
 }
 
 type FriendInviteService struct {
-	friendDao *rpcclient.FriendDaoImpl
-	userDao   *rpcclient.UserDaoImpl
+	friendInviteDao rpcclient.FriendInviteDao
+	friendDao       *rpcclient.FriendDaoImpl
+	userDao         *rpcclient.UserDaoImpl
 }
 
 type FriendInvite model.FriendInvite
@@ -22,9 +23,9 @@ func NewFriendService(friendDao *rpcclient.FriendDaoImpl) *FriendService {
 	}
 }
 
-func NewFriendInviteService(friendDao *rpcclient.FriendDaoImpl) *FriendInviteService {
-	return &FriendInviteService{
-		friendDao: friendDao,
+func NewFriendInviteService(friendInviteDao rpcclient.FriendInviteDao) FriendInviteService {
+	return FriendInviteService{
+		friendInviteDao: friendInviteDao,
 	}
 }
 

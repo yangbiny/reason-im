@@ -21,6 +21,12 @@ type UserDaoImpl struct {
 	DatabaseTpl *mysql2.DatabaseTpl
 }
 
+func NewUserDao(tpl *mysql2.DatabaseTpl) UserDao {
+	return UserDaoImpl{
+		DatabaseTpl: tpl,
+	}
+}
+
 func (u UserDaoImpl) NewUser(user *User) *User {
 	ctx := context.Background()
 	var sqlStr = fmt.Sprintf("insert into %s (name,gmt_create,gmt_update) values (?,?,?)", tableName)

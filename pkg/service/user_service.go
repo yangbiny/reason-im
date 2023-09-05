@@ -5,10 +5,10 @@ import (
 )
 
 type UserService struct {
-	UserDao *rpcclient.UserDaoImpl
+	UserDao rpcclient.UserDao
 }
 
-func NewUserService(userDao *rpcclient.UserDaoImpl) UserService {
+func NewUserService(userDao rpcclient.UserDao) UserService {
 	return UserService{
 		UserDao: userDao,
 	}

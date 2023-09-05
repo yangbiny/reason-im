@@ -2,23 +2,17 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	reason_im "reason-im"
 	"reason-im/internal/config/mysql"
 	mysql2 "reason-im/internal/utils/mysql"
 	"reason-im/pkg/rpcclient"
-	"reason-im/pkg/service"
 )
 
 func NewGinRouter() *gin.Engine {
 	engine := gin.New()
 	datasource := mysql.Datasource()
-
 	// user
-	dao := &rpcclient.UserDaoImpl{
-		DatabaseTpl: &mysql2.DatabaseTpl{
-			Db: datasource,
-		},
-	}
-	userService := service.NewUserService(dao)
+	userService := reason_im.InitUserService()
 	userApi := NewUserApi(&userService)
 	userGroup := engine.Group("/user")
 	{
