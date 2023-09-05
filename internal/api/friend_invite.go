@@ -7,10 +7,10 @@ import (
 )
 
 type FriendInviteApi struct {
-	FriendService *service.FriendInviteService
+	FriendService service.FriendInviteService
 }
 
-func NewFriendInviteApi(friendService *service.FriendInviteService) *FriendInviteApi {
+func NewFriendInviteApi(friendService service.FriendInviteService) *FriendInviteApi {
 	return &FriendInviteApi{
 		FriendService: friendService,
 	}

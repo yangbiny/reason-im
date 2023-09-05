@@ -30,3 +30,12 @@ func InitInviteFriendService() service.FriendInviteService {
 	)
 	return service.FriendInviteService{}
 }
+
+func InitFriendService() service.FriendService {
+	wire.Build(
+		service.NewFriendService,
+		rpcclient.NewFriendDao,
+		wire.Value(tpl),
+	)
+	return service.FriendService{}
+}

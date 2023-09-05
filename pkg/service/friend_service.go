@@ -6,7 +6,7 @@ import (
 )
 
 type FriendService struct {
-	friendDao *rpcclient.FriendDaoImpl
+	friendDao rpcclient.FriendDao
 }
 
 type FriendInviteService struct {
@@ -17,8 +17,8 @@ type FriendInviteService struct {
 
 type FriendInvite model.FriendInvite
 
-func NewFriendService(friendDao *rpcclient.FriendDaoImpl) *FriendService {
-	return &FriendService{
+func NewFriendService(friendDao rpcclient.FriendDao) FriendService {
+	return FriendService{
 		friendDao: friendDao,
 	}
 }

@@ -37,6 +37,17 @@ var (
 	_wireMysqlDatabaseTplValue = tpl
 )
 
+func InitFriendService() service.FriendService {
+	databaseTpl := _wireDatabaseTplValue2
+	friendDao := rpcclient.NewFriendDao(databaseTpl)
+	friendService := service.NewFriendService(friendDao)
+	return friendService
+}
+
+var (
+	_wireDatabaseTplValue2 = tpl
+)
+
 // wire.go:
 
 var datasource = mysql.Datasource()

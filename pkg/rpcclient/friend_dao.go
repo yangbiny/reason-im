@@ -12,7 +12,7 @@ type DeleteFriendCmd struct {
 	Status model.FriendStatus
 }
 
-type FriendClient interface {
+type FriendDao interface {
 	NewFriend(friend *Friend) *Friend
 	GetFriendInfo(friendId int64) *Friend
 	DeleteFriend(cmd DeleteFriendCmd) bool
@@ -22,6 +22,12 @@ type FriendClient interface {
 
 type FriendDaoImpl struct {
 	DatabaseTpl *mysql2.DatabaseTpl
+}
+
+func NewFriendDao(tpl *mysql2.DatabaseTpl) FriendDao {
+	return &FriendDaoImpl{
+		DatabaseTpl: tpl,
+	}
 }
 
 func (dao *FriendDaoImpl) NewFriend(friend *Friend) *Friend {

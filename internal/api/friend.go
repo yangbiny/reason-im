@@ -6,10 +6,10 @@ import (
 )
 
 type FriendApi struct {
-	FriendService *service.FriendService
+	FriendService service.FriendService
 }
 
-func NewFriendApi(friendService *service.FriendService) *FriendApi {
+func NewFriendApi(friendService service.FriendService) *FriendApi {
 	return &FriendApi{
 		FriendService: friendService,
 	}
