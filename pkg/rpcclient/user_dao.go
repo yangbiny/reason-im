@@ -3,12 +3,12 @@ package rpcclient
 import (
 	"context"
 	"fmt"
-	"reason-im/internal/entity"
 	mysql2 "reason-im/internal/utils/mysql"
+	"reason-im/pkg/model"
 	"time"
 )
 
-type User entity.Users
+type User model.Users
 
 var tableName = "im_user"
 
@@ -19,6 +19,12 @@ type UserDao interface {
 
 type UserDaoImpl struct {
 	DatabaseTpl *mysql2.DatabaseTpl
+}
+
+func NewUserDao(tpl *mysql2.DatabaseTpl) UserDao {
+	return UserDaoImpl{
+		DatabaseTpl: tpl,
+	}
 }
 
 func (u UserDaoImpl) NewUser(user *User) *User {

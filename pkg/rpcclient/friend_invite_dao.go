@@ -1,8 +1,11 @@
 package rpcclient
 
-import "reason-im/internal/entity"
+import (
+	"reason-im/internal/utils/mysql"
+	"reason-im/pkg/model"
+)
 
-type FriendInvite entity.FriendInvite
+type FriendInvite model.FriendInvite
 
 type FriendInviteDao interface {
 	NewFriend(friend *FriendInvite) *FriendInvite
@@ -11,4 +14,34 @@ type FriendInviteDao interface {
 	UpdateInvite(cmd *FriendInvite) bool
 	// QueryInviteFriendList 查询用户的 邀请列表
 	QueryInviteFriendList(userId int64) []*FriendInvite
+}
+
+type FriendInviteDaoImpl struct {
+	DatabaseTpl *mysql.DatabaseTpl
+}
+
+func NewFriendInviteDao(tpl *mysql.DatabaseTpl) FriendInviteDao {
+	return FriendInviteDaoImpl{
+		DatabaseTpl: tpl,
+	}
+}
+
+func (f FriendInviteDaoImpl) NewFriend(friend *FriendInvite) *FriendInvite {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f FriendInviteDaoImpl) GetFriendInfo(friendId int64) *FriendInvite {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f FriendInviteDaoImpl) UpdateInvite(cmd *FriendInvite) bool {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f FriendInviteDaoImpl) QueryInviteFriendList(userId int64) []*FriendInvite {
+	//TODO implement me
+	panic("implement me")
 }

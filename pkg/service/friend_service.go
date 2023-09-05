@@ -1,30 +1,31 @@
-package application
+package service
 
 import (
-	"reason-im/internal/entity"
+	"reason-im/pkg/model"
 	"reason-im/pkg/rpcclient"
 )
 
 type FriendService struct {
-	friendDao *rpcclient.FriendDaoImpl
+	friendDao rpcclient.FriendDao
 }
 
 type FriendInviteService struct {
-	friendDao *rpcclient.FriendDaoImpl
-	userDao   *rpcclient.UserDaoImpl
+	friendInviteDao rpcclient.FriendInviteDao
+	friendDao       *rpcclient.FriendDaoImpl
+	userDao         *rpcclient.UserDaoImpl
 }
 
-type FriendInvite entity.FriendInvite
+type FriendInvite model.FriendInvite
 
-func NewFriendService(friendDao *rpcclient.FriendDaoImpl) *FriendService {
-	return &FriendService{
+func NewFriendService(friendDao rpcclient.FriendDao) FriendService {
+	return FriendService{
 		friendDao: friendDao,
 	}
 }
 
-func NewFriendInviteService(friendDao *rpcclient.FriendDaoImpl) *FriendInviteService {
-	return &FriendInviteService{
-		friendDao: friendDao,
+func NewFriendInviteService(friendInviteDao rpcclient.FriendInviteDao) FriendInviteService {
+	return FriendInviteService{
+		friendInviteDao: friendInviteDao,
 	}
 }
 

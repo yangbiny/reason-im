@@ -11,6 +11,12 @@ type DatabaseTpl struct {
 	Db *sql.DB
 }
 
+func NewDatabaseTpl(db *sql.DB) *DatabaseTpl {
+	return &DatabaseTpl{
+		Db: db,
+	}
+}
+
 func (databaseTpl *DatabaseTpl) Insert(ctx context.Context, sql string, opts ...any) int64 {
 	connection := mysql.GetConnection(ctx, databaseTpl.Db)
 	defer mysql.CloseMysqlConn(connection, ctx)

@@ -2,17 +2,17 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"reason-im/internal/application"
 	"reason-im/internal/utils/caller"
 	"reason-im/pkg/rpcclient"
+	"reason-im/pkg/service"
 	"strconv"
 )
 
 type UserApi struct {
-	userService *application.UserService
+	userService *service.UserService
 }
 
-func NewUserApi(service *application.UserService) UserApi {
+func NewUserApi(service *service.UserService) UserApi {
 	return UserApi{
 		userService: service,
 	}

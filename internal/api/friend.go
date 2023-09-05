@@ -2,14 +2,14 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"reason-im/internal/application"
+	"reason-im/pkg/service"
 )
 
 type FriendApi struct {
-	FriendService *application.FriendService
+	FriendService service.FriendService
 }
 
-func NewFriendApi(friendService *application.FriendService) *FriendApi {
+func NewFriendApi(friendService service.FriendService) *FriendApi {
 	return &FriendApi{
 		FriendService: friendService,
 	}
