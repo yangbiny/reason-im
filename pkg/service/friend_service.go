@@ -38,6 +38,19 @@ func (service *FriendInviteService) InviteFriend(cmd InviteFriendCmd) FriendInvi
 	if info != nil {
 		panic("该用户已经是你的好友了")
 	}
+	inviteInfo := service.friendInviteDao.GetFriendInviteInfo(cmd.UserId, cmd.FriendId)
+	if inviteInfo != nil {
+		return FriendInvite{
+			Id:        inviteInfo.Id,
+			UserId:    inviteInfo.UserId,
+			FriendId:  inviteInfo.FriendId,
+			Status:    inviteInfo.Status,
+			Extra:     inviteInfo.Extra,
+			GmtCreate: inviteInfo.GmtCreate,
+			GmtUpdate: inviteInfo.GmtUpdate,
+		}
+	}
+
 	panic("")
 }
 
