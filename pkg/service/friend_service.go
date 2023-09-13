@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"reason-im/pkg/model"
 	"reason-im/pkg/rpcclient"
 )
@@ -33,14 +34,14 @@ func (service *FriendService) QueryUserFriend() {
 
 }
 
-func (service *FriendInviteService) InviteFriend(cmd InviteFriendCmd) FriendInvite {
+func (service *FriendInviteService) InviteFriend(cmd InviteFriendCmd) (*FriendInvite, error) {
 	info := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
 	if info != nil {
-		panic("该用户已经是你的好友了")
+		return nil, fmt.Errorf("该用户已经是你的好友了")
 	}
 	inviteInfo := service.friendInviteDao.GetFriendInviteInfo(cmd.UserId, cmd.FriendId)
 	if inviteInfo != nil {
-		return FriendInvite{
+		return &FriendInvite{
 			Id:        inviteInfo.Id,
 			UserId:    inviteInfo.UserId,
 			FriendId:  inviteInfo.FriendId,
@@ -48,10 +49,10 @@ func (service *FriendInviteService) InviteFriend(cmd InviteFriendCmd) FriendInvi
 			Extra:     inviteInfo.Extra,
 			GmtCreate: inviteInfo.GmtCreate,
 			GmtUpdate: inviteInfo.GmtUpdate,
-		}
+		}, nil
 	}
-
-	panic("")
+	inviteInfo = service.friendInviteDao.NewFriend(model.NewFriendInvite(cmd.UserId, cmd.FriendId))
+	return (*FriendInvite)(inviteInfo), nil
 }
 
 type InviteFriendCmd struct {

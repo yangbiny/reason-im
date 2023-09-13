@@ -8,7 +8,7 @@ import (
 type FriendInvite model.FriendInvite
 
 type FriendInviteDao interface {
-	NewFriend(friend *FriendInvite) *FriendInvite
+	NewFriend(friend *model.FriendInvite) *FriendInvite
 	GetFriendInviteInfo(userId int64, friendId int64) *FriendInvite
 	// UpdateInvite 修改邀请状态
 	UpdateInvite(cmd *FriendInvite) bool
@@ -26,7 +26,7 @@ func NewFriendInviteDao(tpl *mysql.DatabaseTpl) FriendInviteDao {
 	}
 }
 
-func (f FriendInviteDaoImpl) NewFriend(friend *FriendInvite) *FriendInvite {
+func (f FriendInviteDaoImpl) NewFriend(friend *model.FriendInvite) *FriendInvite {
 	//TODO implement me
 	panic("implement me")
 }

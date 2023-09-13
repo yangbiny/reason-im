@@ -37,6 +37,17 @@ type FriendInvite struct {
 	GmtUpdate time.Time          `mysql:"gmt_update" json:"gmt_update"`
 }
 
+func NewFriendInvite(userId int64, friendId int64) *FriendInvite {
+	return &FriendInvite{
+		UserId:    userId,
+		FriendId:  friendId,
+		Status:    INVITE,
+		Extra:     "",
+		GmtCreate: time.Now(),
+		GmtUpdate: time.Now(),
+	}
+}
+
 func (friend *FriendInvite) receiveInvite() {
 	friend.Status = RECEIVE
 	friend.GmtUpdate = time.Now()
