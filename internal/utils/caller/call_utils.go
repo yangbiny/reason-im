@@ -19,7 +19,7 @@ func Call[A, B any](
 }
 
 func CallWithCmd[A, B any](
-	function func(req A) B,
+	function func(req A) (B, error),
 	c *gin.Context,
 	req A,
 ) {
@@ -27,7 +27,10 @@ func CallWithCmd[A, B any](
 		logger.Warn(c, "bind req has failed", "req", req)
 		return
 	}
-	data := function(req)
+	data, err := function(req)
+	if err != nil {
+		c.JSON(400, err.Error())
+	}
 	c.JSON(200, data)
 }
 
