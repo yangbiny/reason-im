@@ -26,7 +26,8 @@ func (friendInviteApi *FriendInviteApi) InviteFriend(c *gin.Context) {
 }
 
 func (friendInviteApi *FriendInviteApi) ReceiveInvite(c *gin.Context) {
-
+	var cmd service.ReceiveInviteCmd
+	caller.CallWithCmd(friendInviteApi.FriendService.ReceiveInvite, c, cmd)
 }
 
 func (friendInviteApi *FriendInviteApi) RejectInvite(c *gin.Context) {

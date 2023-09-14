@@ -55,8 +55,17 @@ func (service *FriendInviteService) InviteFriend(cmd InviteFriendCmd) (*FriendIn
 	return (*FriendInvite)(inviteInfo), nil
 }
 
+func (service *FriendInviteService) ReceiveInvite(cmd ReceiveInviteCmd) (bool, error) {
+	panic("implement me")
+}
+
 type InviteFriendCmd struct {
 	UserId   int64  `login_user_id:"user_id"`
 	FriendId int64  `json:"friend_id"`
 	Remark   string `json:"remark"`
+}
+
+type ReceiveInviteCmd struct {
+	InviteId int64 `json:"invite_id"`
+	UserId   int64 `login_user_id:"user_id"`
 }
