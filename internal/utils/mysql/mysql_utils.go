@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"github.com/pkg/errors"
 	"reason-im/internal/config/mysql"
 	"reason-im/internal/utils/logger"
 )
@@ -43,7 +44,7 @@ func (databaseTpl *DatabaseTpl) FindOne(ctx context.Context, sql string, renderR
 	}
 	queryContext, err := connection.QueryContext(ctx, sql, opts...)
 	if err != nil {
-		panic(err)
+		return nil, errors.WithStack(err)
 	}
 	if !queryContext.Next() {
 		return nil, nil

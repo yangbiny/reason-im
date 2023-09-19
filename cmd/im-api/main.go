@@ -23,5 +23,6 @@ func start() error {
 		logger.Warn(context.Background(), "api run failed", err)
 		return err
 	}
+	logger.Info(context.Background(), "api run success")
 	return nil
 }

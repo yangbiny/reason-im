@@ -1,7 +1,10 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"github.com/pkg/errors"
+	"reason-im/internal/utils/logger"
 	"reason-im/pkg/model"
 	"reason-im/pkg/rpcclient"
 )
@@ -43,13 +46,16 @@ func (service *FriendService) QueryUserFriend() {
 func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendInvite, error) {
 	userInfo, err := service.userDao.GetUserInfo(cmd.UserId)
 	if err != nil {
+		logger.ErrorWithErr(context.Background(), "query has error", errors.WithStack(err))
 		return nil, err
 	}
 	if userInfo == nil {
-		return nil, fmt.Errorf("找不到用户信息：%d", cmd.UserId)
+		logger.Err(context.Background(), "can not find login user Id : %d", cmd.UserId)
+		return nil, errors.WithStack(fmt.Errorf("找不到用户信息：%d", cmd.UserId))
 	}
 	friendUserInfo, _ := service.userDao.GetUserInfo(cmd.FriendId)
 	if friendUserInfo == nil {
+		logger.Err(context.Background(), "can not find friend user Id :%d ", cmd.FriendId)
 		return nil, fmt.Errorf("找不到用户信息：%d", cmd.FriendId)
 	}
 	info, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)

@@ -35,6 +35,7 @@ func Call[A, B any](
 	}
 	data, err := function(req)
 	if err != nil {
+		logger.ErrorWithErr(c, "execute has failed : ", err)
 		c.JSON(wrapWithServiceError(err))
 		return
 	}
