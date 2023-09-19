@@ -19,8 +19,7 @@ func NewUserApi(service *service.UserService) UserApi {
 }
 
 func (api *UserApi) RegisterNewUser(c *gin.Context) {
-	var user rpcclient.User
-	caller.Call(api.userService.NewUser, c, &user)
+	caller.Call(api.userService.NewUser, c, new(rpcclient.User))
 }
 
 func (api *UserApi) QueryUserById(c *gin.Context) {

@@ -1,9 +1,14 @@
 package rpcclient
 
 import (
+	"context"
+	"fmt"
 	mysql2 "reason-im/internal/utils/mysql"
 	"reason-im/pkg/model"
 )
+
+var friendTableName = "im_friend"
+var friendColumns = "id,user_id,friend_id,status,remark,gmt_create,gmt_update"
 
 type Friend model.Friend
 
@@ -49,6 +54,7 @@ func (dao *FriendDaoImpl) QueryFriendList(userId int64) []*Friend {
 }
 
 func (dao *FriendDaoImpl) QueryFriendInfo(userId int64, friendId int64) *Friend {
-	//TODO implement me
-	panic("implement me")
+	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = ?", friendColumns, friendTableName)
+	friend := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, userId, friendId).(Friend)
+	return &friend
 }

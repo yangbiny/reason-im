@@ -34,7 +34,7 @@ func (service *FriendService) QueryUserFriend() {
 
 }
 
-func (service *FriendInviteService) InviteFriend(cmd InviteFriendCmd) (*FriendInvite, error) {
+func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendInvite, error) {
 	info := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
 	if info != nil {
 		return nil, fmt.Errorf("该用户已经是你的好友了")
@@ -55,7 +55,7 @@ func (service *FriendInviteService) InviteFriend(cmd InviteFriendCmd) (*FriendIn
 	return (*FriendInvite)(inviteInfo), nil
 }
 
-func (service *FriendInviteService) ReceiveInvite(cmd ReceiveInviteCmd) (bool, error) {
+func (service *FriendInviteService) ReceiveInvite(cmd *ReceiveInviteCmd) (bool, error) {
 	panic("implement me")
 }
 

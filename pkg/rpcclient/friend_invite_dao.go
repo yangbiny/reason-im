@@ -33,7 +33,7 @@ func (f FriendInviteDaoImpl) NewFriend(friend *model.FriendInvite) *FriendInvite
 
 func (f FriendInviteDaoImpl) GetFriendInviteInfo(userId int64, friendId int64) *FriendInvite {
 	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (f FriendInviteDaoImpl) UpdateInvite(cmd *FriendInvite) bool {

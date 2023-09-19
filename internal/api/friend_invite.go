@@ -21,13 +21,11 @@ func (friendInviteApi *FriendInviteApi) QueryFriendsInvite(c *gin.Context) {
 }
 
 func (friendInviteApi *FriendInviteApi) InviteFriend(c *gin.Context) {
-	var cmd service.InviteFriendCmd
-	caller.CallWithCmd(friendInviteApi.FriendService.InviteFriend, c, cmd)
+	caller.Call(friendInviteApi.FriendService.InviteFriend, c, new(service.InviteFriendCmd))
 }
 
 func (friendInviteApi *FriendInviteApi) ReceiveInvite(c *gin.Context) {
-	var cmd service.ReceiveInviteCmd
-	caller.CallWithCmd(friendInviteApi.FriendService.ReceiveInvite, c, cmd)
+	caller.Call(friendInviteApi.FriendService.ReceiveInvite, c, new(service.ReceiveInviteCmd))
 }
 
 func (friendInviteApi *FriendInviteApi) RejectInvite(c *gin.Context) {
