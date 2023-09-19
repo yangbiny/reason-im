@@ -46,7 +46,7 @@ func (service *FriendService) QueryUserFriend() {
 func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendInvite, error) {
 	userInfo, err := service.userDao.GetUserInfo(cmd.UserId)
 	if err != nil {
-		logger.ErrorWithErr(context.Background(), "query has error", errors.WithStack(err))
+		logger.ErrorWithErr(context.Background(), "query has error", err)
 		return nil, err
 	}
 	if userInfo == nil {
