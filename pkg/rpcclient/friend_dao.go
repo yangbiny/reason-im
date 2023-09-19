@@ -30,7 +30,7 @@ type FriendDaoImpl struct {
 }
 
 func NewFriendDao(tpl *mysql2.DatabaseTpl) FriendDao {
-	return &FriendDaoImpl{
+	return FriendDaoImpl{
 		DatabaseTpl: tpl,
 	}
 }
@@ -54,8 +54,8 @@ func (dao FriendDaoImpl) QueryFriendList(userId int64) ([]*Friend, error) {
 }
 
 func (dao FriendDaoImpl) QueryFriendInfo(userId int64, friendId int64) (*Friend, error) {
-	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = 1", friendColumns, friendTableName)
-	one, err := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, userId)
+	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = ?", friendColumns, friendTableName)
+	one, err := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, userId, friendId)
 	if err != nil || one == nil {
 		return nil, err
 	}
