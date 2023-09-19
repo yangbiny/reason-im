@@ -36,21 +36,46 @@ func NewFriendDao(tpl *mysql2.DatabaseTpl) FriendDao {
 }
 
 func (dao FriendDaoImpl) NewFriend(friend *Friend) (*Friend, error) {
-	panic("implement me")
+	var sql = fmt.Sprintf("insert into %s (user_id,friend_id,status,remark,gmt_create,gmt_update) values (?,?,?,?,?,?)", friendTableName)
+	insert, err := dao.DatabaseTpl.Insert(context.Background(), sql, friend.UserId, friend.FriendId, friend.Status, friend.Remark, friend.GmtCreate, friend.GmtUpdate)
+	if err != nil {
+		return nil, err
+	}
+	friend.Id = insert
+	return friend, nil
 }
 
 func (dao FriendDaoImpl) GetFriendInfo(friendId int64) (*Friend, error) {
-	panic("implement me")
+	var sql = fmt.Sprintf("select %s from %s where id = ?", friendColumns, friendTableName)
+	one, err := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, friendId)
+	if err != nil || one == nil {
+		return nil, err
+	}
+	friend := one.(Friend)
+	return &friend, nil
 }
 
 func (dao FriendDaoImpl) DeleteFriend(cmd DeleteFriendCmd) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+	var sql = fmt.Sprintf("update %s set status = ? where id = ?", friendTableName)
+	rows, err := dao.DatabaseTpl.Update(context.Background(), sql, cmd.Status, cmd.Id)
+	if err != nil {
+		return false, err
+	}
+	return rows > 0, nil
 }
 
 func (dao FriendDaoImpl) QueryFriendList(userId int64) ([]*Friend, error) {
-	//TODO implement me
-	panic("implement me")
+	var sql = fmt.Sprintf("select %s from %s where user_id = ?", friendColumns, friendTableName)
+	rows, err := dao.DatabaseTpl.FindList(context.Background(), sql, Friend{}, userId)
+	if err != nil {
+		return nil, err
+	}
+	var friends []*Friend
+	for _, row := range rows {
+		friend := row.(Friend)
+		friends = append(friends, &friend)
+	}
+	return friends, nil
 }
 
 func (dao FriendDaoImpl) QueryFriendInfo(userId int64, friendId int64) (*Friend, error) {
