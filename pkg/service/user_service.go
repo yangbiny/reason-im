@@ -15,9 +15,9 @@ func NewUserService(userDao rpcclient.UserDao) UserService {
 }
 
 func (userService UserService) NewUser(user *rpcclient.User) (*rpcclient.User, error) {
-	return userService.UserDao.NewUser(user), nil
+	return userService.UserDao.NewUser(user)
 }
 
 func (userService UserService) GetUserInfo(userId int64) (*rpcclient.User, error) {
-	return userService.UserDao.GetUserInfo(userId), nil
+	return userService.UserDao.GetUserInfo(userId)
 }

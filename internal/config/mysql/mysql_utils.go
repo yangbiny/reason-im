@@ -25,13 +25,13 @@ func Datasource() *sql.DB {
 	return db
 }
 
-func GetConnection(ctx context.Context, db *sql.DB) *sql.Conn {
+func GetConnection(ctx context.Context, db *sql.DB) (*sql.Conn, error) {
 	conn, err := db.Conn(ctx)
 	if err != nil {
 		logger.Error(ctx, "get mysql conn has failed", err)
-		panic(err)
+		return nil, err
 	}
-	return conn
+	return conn, nil
 }
 
 func CloseMysqlConn(conn *sql.Conn, context context.Context) {

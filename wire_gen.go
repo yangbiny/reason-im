@@ -29,7 +29,9 @@ var (
 func InitInviteFriendService() service.FriendInviteService {
 	databaseTpl := _wireMysqlDatabaseTplValue
 	friendInviteDao := rpcclient.NewFriendInviteDao(databaseTpl)
-	friendInviteService := service.NewFriendInviteService(friendInviteDao)
+	friendDao := rpcclient.NewFriendDao(databaseTpl)
+	userDao := rpcclient.NewUserDao(databaseTpl)
+	friendInviteService := service.NewFriendInviteService(friendInviteDao, friendDao, userDao)
 	return friendInviteService
 }
 

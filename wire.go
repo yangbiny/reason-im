@@ -26,6 +26,8 @@ func InitInviteFriendService() service.FriendInviteService {
 	wire.Build(
 		service.NewFriendInviteService,
 		rpcclient.NewFriendInviteDao,
+		rpcclient.NewFriendDao,
+		rpcclient.NewUserDao,
 		wire.Value(tpl),
 	)
 	return service.FriendInviteService{}

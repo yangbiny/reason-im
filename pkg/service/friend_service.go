@@ -12,8 +12,8 @@ type FriendService struct {
 
 type FriendInviteService struct {
 	friendInviteDao rpcclient.FriendInviteDao
-	friendDao       *rpcclient.FriendDaoImpl
-	userDao         *rpcclient.UserDaoImpl
+	friendDao       rpcclient.FriendDao
+	userDao         rpcclient.UserDao
 }
 
 type FriendInvite model.FriendInvite
@@ -24,9 +24,15 @@ func NewFriendService(friendDao rpcclient.FriendDao) FriendService {
 	}
 }
 
-func NewFriendInviteService(friendInviteDao rpcclient.FriendInviteDao) FriendInviteService {
+func NewFriendInviteService(
+	friendInviteDao rpcclient.FriendInviteDao,
+	friendDao rpcclient.FriendDao,
+	userDao rpcclient.UserDao,
+) FriendInviteService {
 	return FriendInviteService{
 		friendInviteDao: friendInviteDao,
+		friendDao:       friendDao,
+		userDao:         userDao,
 	}
 }
 
@@ -35,11 +41,28 @@ func (service *FriendService) QueryUserFriend() {
 }
 
 func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendInvite, error) {
-	info := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
+	userInfo, err := service.userDao.GetUserInfo(cmd.UserId)
+	if err != nil {
+		return nil, err
+	}
+	if userInfo == nil {
+		return nil, fmt.Errorf("找不到用户信息：%d", cmd.UserId)
+	}
+	friendUserInfo, _ := service.userDao.GetUserInfo(cmd.FriendId)
+	if friendUserInfo == nil {
+		return nil, fmt.Errorf("找不到用户信息：%d", cmd.FriendId)
+	}
+	info, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
+	if err != nil {
+		return nil, err
+	}
 	if info != nil {
 		return nil, fmt.Errorf("该用户已经是你的好友了")
 	}
-	inviteInfo := service.friendInviteDao.GetFriendInviteInfo(cmd.UserId, cmd.FriendId)
+	inviteInfo, err := service.friendInviteDao.GetFriendInviteInfo(cmd.UserId, cmd.FriendId)
+	if err != nil {
+		return nil, err
+	}
 	if inviteInfo != nil {
 		return &FriendInvite{
 			Id:        inviteInfo.Id,
@@ -51,7 +74,10 @@ func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendI
 			GmtUpdate: inviteInfo.GmtUpdate,
 		}, nil
 	}
-	inviteInfo = service.friendInviteDao.NewFriend(model.NewFriendInvite(cmd.UserId, cmd.FriendId))
+	inviteInfo, err = service.friendInviteDao.NewFriend(model.NewFriendInvite(cmd.UserId, cmd.FriendId))
+	if err != nil {
+		return nil, err
+	}
 	return (*FriendInvite)(inviteInfo), nil
 }
 

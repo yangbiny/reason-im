@@ -10,7 +10,7 @@ import (
 var friendTableName = "im_friend"
 var friendColumns = "id,user_id,friend_id,status,remark,gmt_create,gmt_update"
 
-type Friend model.Friend
+type Friend = model.Friend
 
 type DeleteFriendCmd struct {
 	Id     int64
@@ -18,11 +18,11 @@ type DeleteFriendCmd struct {
 }
 
 type FriendDao interface {
-	NewFriend(friend *Friend) *Friend
-	GetFriendInfo(friendId int64) *Friend
-	DeleteFriend(cmd DeleteFriendCmd) bool
-	QueryFriendList(userId int64) []*Friend
-	QueryFriendInfo(userId int64, friendId int64) *Friend
+	NewFriend(friend *Friend) (*Friend, error)
+	GetFriendInfo(friendId int64) (*Friend, error)
+	DeleteFriend(cmd DeleteFriendCmd) (bool, error)
+	QueryFriendList(userId int64) ([]*Friend, error)
+	QueryFriendInfo(userId int64, friendId int64) (*Friend, error)
 }
 
 type FriendDaoImpl struct {
@@ -35,26 +35,30 @@ func NewFriendDao(tpl *mysql2.DatabaseTpl) FriendDao {
 	}
 }
 
-func (dao *FriendDaoImpl) NewFriend(friend *Friend) *Friend {
+func (dao FriendDaoImpl) NewFriend(friend *Friend) (*Friend, error) {
 	panic("implement me")
 }
 
-func (dao *FriendDaoImpl) GetFriendInfo(friendId int64) *Friend {
+func (dao FriendDaoImpl) GetFriendInfo(friendId int64) (*Friend, error) {
 	panic("implement me")
 }
 
-func (dao *FriendDaoImpl) DeleteFriend(cmd DeleteFriendCmd) bool {
+func (dao FriendDaoImpl) DeleteFriend(cmd DeleteFriendCmd) (bool, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (dao *FriendDaoImpl) QueryFriendList(userId int64) []*Friend {
+func (dao FriendDaoImpl) QueryFriendList(userId int64) ([]*Friend, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (dao *FriendDaoImpl) QueryFriendInfo(userId int64, friendId int64) *Friend {
-	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = ?", friendColumns, friendTableName)
-	friend := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, userId, friendId).(Friend)
-	return &friend
+func (dao FriendDaoImpl) QueryFriendInfo(userId int64, friendId int64) (*Friend, error) {
+	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = 1", friendColumns, friendTableName)
+	one, err := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, userId)
+	if err != nil || one == nil {
+		return nil, err
+	}
+	friend := one.(Friend)
+	return &friend, nil
 }
