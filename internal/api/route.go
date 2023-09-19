@@ -15,6 +15,7 @@ func NewGinRouter() *gin.Engine {
 	{
 		userGroup.POST("/register/", userApi.RegisterNewUser)
 		userGroup.GET("/query/", userApi.QueryUserById)
+		userGroup.POST("/login/", userApi.Login)
 	}
 
 	// friend

@@ -14,12 +14,7 @@ const JwtIss = "ri-im-n98TmvynRdEl29Ko"
 
 func Authorize() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token, err := ctx.Cookie("token")
-		if err != nil {
-			logger.ErrorWithErr(ctx, "get cookie has failed", errors.WithStack(err))
-			ctx.Abort()
-			return
-		}
+		token := ctx.GetHeader("Set-Cookie")
 		jwtToken, err := ParseJwtToken(token)
 		if err != nil {
 			logger.ErrorWithErr(ctx, "parse jwt token has failed", errors.WithStack(err))
@@ -32,6 +27,7 @@ func Authorize() gin.HandlerFunc {
 			return
 		}
 		ctx.Set("login_user_id", jwtToken.UserId)
+		ctx.Next()
 	}
 }
 
