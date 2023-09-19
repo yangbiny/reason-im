@@ -42,6 +42,25 @@ func Call[A, B any](
 	c.JSON(wrapWithExecuteSuccess(data))
 }
 
+func CallWithContext[A, B any](
+	function func(c *gin.Context, req A) (B, error),
+	c *gin.Context,
+	req A,
+) {
+	if err := c.BindJSON(req); err != nil {
+		logger.Error(c, "bind req has failed", "req", req)
+		ResponseWithParamInvalid(c, err.Error())
+		return
+	}
+	data, err := function(c, req)
+	if err != nil {
+		logger.ErrorWithErr(c, "execute has failed : ", err)
+		c.JSON(wrapWithServiceError(err))
+		return
+	}
+	c.JSON(wrapWithExecuteSuccess(data))
+}
+
 func CallWithParam[A, B any](
 	function func(req A) (B, error),
 	c *gin.Context,

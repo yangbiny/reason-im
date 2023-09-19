@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	reason_im "reason-im"
+	"reason-im/internal/config/web"
 )
 
 func NewGinRouter() *gin.Engine {
@@ -21,7 +22,7 @@ func NewGinRouter() *gin.Engine {
 	friendService := reason_im.InitFriendService()
 	friendApi := NewFriendApi(friendService)
 	friendInviteApi := NewFriendInviteApi(inviteService)
-	friendGroup := engine.Group("/friend")
+	friendGroup := engine.Group("/friend", web.Authorize())
 	{
 		friendGroup.POST("/invite/", friendInviteApi.InviteFriend)
 		friendGroup.POST("/invite/receive/", friendInviteApi.ReceiveInvite)

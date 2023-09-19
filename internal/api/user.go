@@ -30,3 +30,7 @@ func (api *UserApi) QueryUserById(c *gin.Context) {
 	userId, _ := strconv.Atoi(userIdStr)
 	caller.CallWithParam(api.userService.GetUserInfo, c, int64(userId))
 }
+
+func (api *UserApi) Login(c *gin.Context) {
+	caller.CallWithContext(api.userService.Login, c, new(service.UserLoginCmd))
+}

@@ -15,6 +15,7 @@ var tableName = "im_user"
 type UserDao interface {
 	NewUser(user *User) (*User, error)
 	GetUserInfo(userId int64) (*User, error)
+	QueryUserByName(name string) (*User, error)
 }
 
 type UserDaoImpl struct {
@@ -45,6 +46,17 @@ func (u UserDaoImpl) GetUserInfo(userId int64) (*User, error) {
 	ctx := context.Background()
 	sql := fmt.Sprintf("select * from %s where id = ?", tableName)
 	one, err := u.DatabaseTpl.FindOne(ctx, sql, User{}, userId)
+	if err != nil || one == nil {
+		return nil, err
+	}
+	user := one.(User)
+	return &user, nil
+}
+
+func (u UserDaoImpl) QueryUserByName(name string) (*User, error) {
+	var sql = "select * from " + tableName + " where name = ?"
+	ctx := context.Background()
+	one, err := u.DatabaseTpl.FindOne(ctx, sql, User{}, name)
 	if err != nil || one == nil {
 		return nil, err
 	}
