@@ -2,12 +2,19 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	reason_im "reason-im"
 	"reason-im/internal/config/web"
+	"reason-im/internal/utils/logger"
 )
 
 func NewGinRouter() *gin.Engine {
 	engine := gin.New()
+	err := engine.SetTrustedProxies([]string{"127.0.0.1"})
+	if err != nil {
+		logger.ErrorWithErr(nil, "set trusted proxies has failed", errors.WithStack(err))
+		return nil
+	}
 	// user
 	userService := reason_im.InitUserService()
 	userApi := NewUserApi(&userService)
