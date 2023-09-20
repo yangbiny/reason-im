@@ -1,8 +1,11 @@
 package caller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"reason-im/internal/utils/logger"
+	"reflect"
 )
 
 type ApiRespCode int
@@ -32,6 +35,23 @@ func Call[A, B any](
 		logger.Error(c, "bind req has failed", "req", req)
 		ResponseWithParamInvalid(c, err.Error())
 		return
+	}
+	value, exists := c.Get("login_user_id")
+	if exists {
+		of := reflect.TypeOf(req)
+		if of.Kind() != reflect.Pointer {
+			c.JSON(wrapWithServiceError(errors.WithStack(fmt.Errorf("req must be pointer"))))
+			return
+		}
+		elem := of.Elem()
+		for i := 0; i < elem.NumField(); i++ {
+			field := elem.Field(i)
+			tag := field.Tag.Get("login_user_id")
+			if len(tag) > 0 {
+				v := reflect.ValueOf(req)
+				v.Elem().Field(i).SetInt(reflect.ValueOf(value).Int())
+			}
+		}
 	}
 	data, err := function(req)
 	if err != nil {
