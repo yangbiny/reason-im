@@ -1,7 +1,6 @@
 package web
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -15,7 +14,13 @@ const JwtIss = "ri-im-n98TmvynRdEl29Ko"
 
 func Authorize() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token := ctx.GetHeader("Set-Cookie")
+		cookie, err := ctx.Request.Cookie("token")
+		if err != nil {
+			ctx.JSON(400, caller.ApiResp{Code: caller.ParamInvalid, Msg: "未登录"})
+			ctx.Abort()
+			return
+		}
+		token := cookie.Value
 		if len(token) == 0 {
 			ctx.Abort()
 			ctx.JSON(400, caller.ApiResp{Code: caller.ParamInvalid, Msg: "未登录"})
@@ -56,7 +61,7 @@ func ParseJwtToken(token string) (*Token, error) {
 	return nil, nil
 }
 
-func GenerateJwtToken(ctx context.Context, username string, userId int64) (string, error) {
+func GenerateJwtToken(ctx *gin.Context, username string, userId int64) error {
 	tokenStruct := &Token{
 		Username: username,
 		UserId:   userId,
@@ -65,7 +70,7 @@ func GenerateJwtToken(ctx context.Context, username string, userId int64) (strin
 	marshal, err := json.Marshal(tokenStruct)
 	if err != nil {
 		logger.ErrorWithErr(ctx, "marshal token has failed", errors.WithStack(err))
-		return "", nil
+		return nil
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"extra": string(marshal),
@@ -76,9 +81,10 @@ func GenerateJwtToken(ctx context.Context, username string, userId int64) (strin
 	signedString, err := token.SignedString(by)
 	if err != nil {
 		logger.ErrorWithErr(ctx, "sign token has failed", errors.WithStack(err))
-		return "", nil
+		return nil
 	}
-	return signedString, err
+	ctx.SetCookie("token", signedString, 60*60*24*7, "/", "localhost", false, true)
+	return nil
 }
 
 const privateKey = "ZQaWJ0cMYFEx71hAmFcc8wr9Qfjky98kZtSrZzESiSN86fKjjNkaWeDkkpG3wzkBTAY4FxisenWxbr1ZiXcGW9TQnabfxmQzT45h"

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"reason-im/internal/config/web"
 	"reason-im/pkg/rpcclient"
@@ -33,12 +32,11 @@ func (userService UserService) Login(c *gin.Context, user *UserLoginCmd) (bool, 
 	if queryUser == nil {
 		return false, nil
 	}
-	token, err := web.GenerateJwtToken(context.Background(), queryUser.Name, queryUser.Id)
+	err = web.GenerateJwtToken(c, queryUser.Name, queryUser.Id)
 	if err != nil {
 		return false, err
 	}
-	c.SetCookie("token", token, 60*60*24*7, "/", "localhost", false, true)
-	return false, nil
+	return true, nil
 }
 
 type UserLoginCmd struct {
