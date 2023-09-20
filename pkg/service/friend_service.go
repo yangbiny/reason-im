@@ -44,6 +44,9 @@ func (service *FriendService) QueryUserFriend() {
 }
 
 func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendInvite, error) {
+	if cmd.UserId == cmd.FriendId {
+		return nil, errors.WithStack(fmt.Errorf("不能添加自己为好友"))
+	}
 	userInfo, err := service.userDao.GetUserInfo(cmd.UserId)
 	if err != nil {
 		logger.ErrorWithErr(context.Background(), "query has error", err)

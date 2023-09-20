@@ -1,9 +1,7 @@
 package caller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"reason-im/internal/utils/logger"
 	"reflect"
 )
@@ -36,23 +34,7 @@ func Call[A, B any](
 		ResponseWithParamInvalid(c, err.Error())
 		return
 	}
-	value, exists := c.Get("login_user_id")
-	if exists {
-		of := reflect.TypeOf(req)
-		if of.Kind() != reflect.Pointer {
-			c.JSON(wrapWithServiceError(errors.WithStack(fmt.Errorf("req must be pointer"))))
-			return
-		}
-		elem := of.Elem()
-		for i := 0; i < elem.NumField(); i++ {
-			field := elem.Field(i)
-			tag := field.Tag.Get("login_user_id")
-			if len(tag) > 0 {
-				v := reflect.ValueOf(req)
-				v.Elem().Field(i).SetInt(reflect.ValueOf(value).Int())
-			}
-		}
-	}
+	renderLoginUserId(c, req)
 	data, err := function(req)
 	if err != nil {
 		logger.ErrorWithErr(c, "execute has failed : ", err)
@@ -72,6 +54,7 @@ func CallWithContext[A, B any](
 		ResponseWithParamInvalid(c, err.Error())
 		return
 	}
+	renderLoginUserId(c, req)
 	data, err := function(c, req)
 	if err != nil {
 		logger.ErrorWithErr(c, "execute has failed : ", err)
@@ -86,6 +69,7 @@ func CallWithParam[A, B any](
 	c *gin.Context,
 	req A,
 ) {
+	renderLoginUserId(c, req)
 	data, err := function(req)
 	if err != nil {
 		logger.Error(c, "call function has failed", "req", req, "err", err)
@@ -121,4 +105,23 @@ func wrapWithParamsInvalid(msg string) (int, any) {
 
 func ResponseWithParamInvalid(c *gin.Context, msg string) {
 	c.JSON(400, msg)
+}
+
+func renderLoginUserId[A any](c *gin.Context, req A) {
+	value, exists := c.Get("login_user_id")
+	if exists {
+		of := reflect.TypeOf(req)
+		var elem = of
+		if of.Kind() == reflect.Pointer {
+			elem = of.Elem()
+		}
+		for i := 0; i < elem.NumField(); i++ {
+			field := elem.Field(i)
+			tag := field.Tag.Get("login_user_id")
+			if len(tag) > 0 {
+				v := reflect.ValueOf(req)
+				v.Elem().Field(i).SetInt(reflect.ValueOf(value).Int())
+			}
+		}
+	}
 }

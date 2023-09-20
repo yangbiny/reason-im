@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
+	"reason-im/internal/utils/caller"
 	"reason-im/internal/utils/logger"
 	"time"
 )
@@ -15,6 +16,11 @@ const JwtIss = "ri-im-n98TmvynRdEl29Ko"
 func Authorize() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := ctx.GetHeader("Set-Cookie")
+		if len(token) == 0 {
+			ctx.Abort()
+			ctx.JSON(400, caller.ApiResp{Code: caller.ParamInvalid, Msg: "未登录"})
+			return
+		}
 		jwtToken, err := ParseJwtToken(token)
 		if err != nil {
 			logger.ErrorWithErr(ctx, "parse jwt token has failed", errors.WithStack(err))
@@ -23,7 +29,7 @@ func Authorize() gin.HandlerFunc {
 		}
 		if jwtToken == nil {
 			ctx.Abort()
-			ctx.JSON(400, "{\"status\":4,\"msg\":\"未登录\"}")
+			ctx.JSON(400, caller.ApiResp{Code: caller.ParamInvalid, Msg: "未登录"})
 			return
 		}
 		ctx.Set("login_user_id", jwtToken.UserId)
