@@ -7,12 +7,12 @@ import (
 )
 
 type FriendInviteApi struct {
-	FriendService service.FriendInviteService
+	InviteFriendService service.FriendInviteService
 }
 
 func NewFriendInviteApi(friendService service.FriendInviteService) *FriendInviteApi {
 	return &FriendInviteApi{
-		FriendService: friendService,
+		InviteFriendService: friendService,
 	}
 }
 
@@ -21,11 +21,11 @@ func (friendInviteApi *FriendInviteApi) QueryFriendsInvite(c *gin.Context) {
 }
 
 func (friendInviteApi *FriendInviteApi) InviteFriend(c *gin.Context) {
-	caller.Call(friendInviteApi.FriendService.InviteFriend, c, new(service.InviteFriendCmd))
+	caller.Call(friendInviteApi.InviteFriendService.InviteFriend, c, new(service.InviteFriendCmd))
 }
 
 func (friendInviteApi *FriendInviteApi) ReceiveInvite(c *gin.Context) {
-	caller.Call(friendInviteApi.FriendService.ReceiveInvite, c, new(service.ReceiveInviteCmd))
+	caller.Call(friendInviteApi.InviteFriendService.ReceiveInvite, c, new(service.ReceiveInviteCmd))
 }
 
 func (friendInviteApi *FriendInviteApi) RejectInvite(c *gin.Context) {

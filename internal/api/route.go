@@ -5,7 +5,9 @@ import (
 	"github.com/pkg/errors"
 	reason_im "reason-im"
 	"reason-im/internal/config/web"
+	"reason-im/internal/utils/caller"
 	"reason-im/internal/utils/logger"
+	"reason-im/pkg/service"
 )
 
 func NewGinRouter() *gin.Engine {
@@ -32,7 +34,7 @@ func NewGinRouter() *gin.Engine {
 	friendInviteApi := NewFriendInviteApi(inviteService)
 	friendGroup := engine.Group("/friend", web.Authorize())
 	{
-		friendGroup.POST("/invite/", friendInviteApi.InviteFriend)
+		friendGroup.POST("/invite/", onEvent(new(service.InviteFriendCmd), friendInviteApi.InviteFriendService.InviteFriend))
 		friendGroup.POST("/invite/receive/", friendInviteApi.ReceiveInvite)
 		friendGroup.POST("/invite/reject/", friendInviteApi.RejectInvite)
 
@@ -41,4 +43,10 @@ func NewGinRouter() *gin.Engine {
 	}
 
 	return engine
+}
+
+func onEvent[Req, Resp any](req Req, pairs func(command Req) (Resp, error)) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		caller.Call(pairs, c, req)
+	}
 }
