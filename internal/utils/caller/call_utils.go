@@ -2,6 +2,7 @@ package caller
 
 import (
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"reason-im/internal/utils/logger"
 	"reflect"
 )
@@ -36,6 +37,26 @@ func Call[A, B any](
 	}
 	renderLoginUserId(c, req)
 	data, err := function(req)
+	if err != nil {
+		logger.ErrorWithErr(c, "execute has failed : ", err)
+		c.JSON(wrapWithServiceError(err))
+		return
+	}
+	c.JSON(wrapWithExecuteSuccess(data))
+}
+
+func CallMS[A, B any](
+	c *gin.Context,
+	function func(write http.ResponseWriter, request *http.Request, req A) (B, error),
+	req A,
+) {
+	if err := c.BindJSON(req); err != nil {
+		logger.Error(c, "bind req has failed", "req", req)
+		ResponseWithParamInvalid(c, err.Error())
+		return
+	}
+	renderLoginUserId(c, req)
+	data, err := function(c.Writer, c.Request, req)
 	if err != nil {
 		logger.ErrorWithErr(c, "execute has failed : ", err)
 		c.JSON(wrapWithServiceError(err))

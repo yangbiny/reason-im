@@ -42,6 +42,7 @@ func NewGinRouter() *gin.Engine {
 		friendGroup.POST("/query/list/", friendApi.QueryFriends)
 	}
 
+	engine.GET("ws/msg/")
 	return engine
 }
 
@@ -49,4 +50,8 @@ func onEvent[Req, Resp any](req Req, pairs func(command Req) (Resp, error)) gin.
 	return func(c *gin.Context) {
 		caller.Call(pairs, c, req)
 	}
+}
+
+func onWSRequest(c *gin.Context) {
+	caller.CallMS(c, service.MSService, new(service.MSServiceCmd))
 }
