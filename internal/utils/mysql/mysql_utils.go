@@ -12,6 +12,8 @@ type DatabaseTpl struct {
 	Db *sql.DB
 }
 
+type Transaction = *sql.Tx
+
 func NewDatabaseTpl(db *sql.DB) *DatabaseTpl {
 	return &DatabaseTpl{
 		Db: db,
@@ -85,4 +87,25 @@ func (databaseTpl *DatabaseTpl) FindList(ctx context.Context, sql string, render
 		result = append(result, i)
 	}
 	return result, nil
+}
+
+func (databaseTpl *DatabaseTpl) WithTransaction(ctx *context.Context, f func(tx Transaction) error) error {
+	tx, err := databaseTpl.Db.Begin()
+	value := context.WithValue(*ctx, "tx", tx)
+	ctx = &value
+	defer func(ctx context.Context, tx *sql.Tx) {
+		err := tx.Rollback()
+		if err != nil {
+			logger.Error(ctx, "", err)
+		}
+	}(*ctx, tx)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	err = f(tx)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	err = tx.Commit()
+	return err
 }

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"reason-im/internal/utils/logger"
+	mysql2 "reason-im/internal/utils/mysql"
 	"reason-im/pkg/model"
 	"reason-im/pkg/rpcclient"
+	"time"
 )
 
 type FriendService struct {
@@ -17,9 +19,12 @@ type FriendInviteService struct {
 	friendInviteDao rpcclient.FriendInviteDao
 	friendDao       rpcclient.FriendDao
 	userDao         rpcclient.UserDao
+	databaseTpl     *mysql2.DatabaseTpl
 }
 
-type FriendInvite model.FriendInvite
+type FriendInvite = model.FriendInvite
+
+type Friend = model.Friend
 
 func NewFriendService(friendDao rpcclient.FriendDao) FriendService {
 	return FriendService{
@@ -31,16 +36,14 @@ func NewFriendInviteService(
 	friendInviteDao rpcclient.FriendInviteDao,
 	friendDao rpcclient.FriendDao,
 	userDao rpcclient.UserDao,
+	tpl *mysql2.DatabaseTpl,
 ) FriendInviteService {
 	return FriendInviteService{
 		friendInviteDao: friendInviteDao,
 		friendDao:       friendDao,
 		userDao:         userDao,
+		databaseTpl:     tpl,
 	}
-}
-
-func (service *FriendService) QueryUserFriend() {
-
 }
 
 func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendInvite, error) {
@@ -61,6 +64,14 @@ func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendI
 		logger.Err(context.Background(), "can not find friend user Id :%d ", cmd.FriendId)
 		return nil, fmt.Errorf("找不到用户信息：%d", cmd.FriendId)
 	}
+	friendInfo, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
+	if err != nil {
+		return nil, err
+	}
+	if friendInfo != nil {
+		return nil, fmt.Errorf("该用户已经是你的好友了")
+	}
+
 	info, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
 	if err != nil {
 		return nil, err
@@ -68,7 +79,7 @@ func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendI
 	if info != nil {
 		return nil, fmt.Errorf("该用户已经是你的好友了")
 	}
-	inviteInfo, err := service.friendInviteDao.GetFriendInviteInfo(cmd.UserId, cmd.FriendId)
+	inviteInfo, err := service.friendInviteDao.GetFriendInviteInfo(context.Background(), cmd.UserId, cmd.FriendId)
 	if err != nil {
 		return nil, err
 	}
@@ -83,15 +94,53 @@ func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendI
 			GmtUpdate: inviteInfo.GmtUpdate,
 		}, nil
 	}
-	inviteInfo, err = service.friendInviteDao.NewFriend(model.NewFriendInvite(cmd.UserId, cmd.FriendId))
+	inviteInfo, err = service.friendInviteDao.NewFriend(context.Background(), model.NewFriendInvite(cmd.UserId, cmd.FriendId))
 	if err != nil {
 		return nil, err
 	}
-	return (*FriendInvite)(inviteInfo), nil
+	return inviteInfo, nil
 }
 
 func (service *FriendInviteService) ReceiveInvite(cmd *ReceiveInviteCmd) (bool, error) {
-	panic("implement me")
+	background := context.Background()
+	invite, err := service.friendInviteDao.QueryInvite(background, cmd.InviteId)
+	if err != nil {
+		return false, err
+	}
+	if invite == nil || invite.UserId != cmd.UserId {
+		return false, errors.WithStack(fmt.Errorf("邀请信息不存在"))
+	}
+	if invite.Status != model.INVITE {
+		return false, errors.WithStack(fmt.Errorf("邀请信息已经处理过了"))
+	}
+
+	var friend = Friend{
+		UserId:    invite.UserId,
+		FriendId:  invite.FriendId,
+		Remark:    invite.Extra,
+		Status:    model.NORMAL,
+		GmtCreate: time.Now(),
+		GmtUpdate: time.Now(),
+	}
+	invite.ReceiveInvite()
+
+	err = service.databaseTpl.WithTransaction(&background, func(tx mysql2.Transaction) error {
+		_, err = service.friendInviteDao.UpdateInvite(background, invite)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+		_, err = service.friendDao.NewFriend(&friend)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 type InviteFriendCmd struct {

@@ -48,17 +48,17 @@ func NewFriendInvite(userId int64, friendId int64) *FriendInvite {
 	}
 }
 
-func (friend *FriendInvite) receiveInvite() {
+func (friend *FriendInvite) ReceiveInvite() {
 	friend.Status = RECEIVE
 	friend.GmtUpdate = time.Now()
 }
 
-func (friend *FriendInvite) rejectFriend() {
+func (friend *FriendInvite) RejectFriend() {
 	friend.Status = REJECT
 	friend.GmtUpdate = time.Now()
 }
 
-func (friend *Friend) deleteFriend() {
+func (friend *Friend) DeleteFriend() {
 	friend.Status = DELETE
 	friend.GmtUpdate = time.Now()
 }
