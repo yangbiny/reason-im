@@ -54,11 +54,27 @@ func (f FriendInviteDaoImpl) GetFriendInviteInfo(userId int64, friendId int64) (
 }
 
 func (f FriendInviteDaoImpl) UpdateInvite(cmd *FriendInvite) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+	var sql = fmt.Sprintf("update %s set status = ?,extra = ?,gmt_update where id = ?", friendInviteTableName)
+	update, err := f.DatabaseTpl.Update(context.Background(), sql, cmd.Status, cmd.Extra, cmd.GmtUpdate, cmd.Id)
+	if err != nil {
+		return false, err
+	}
+	return update > 0, nil
 }
 
 func (f FriendInviteDaoImpl) QueryInviteFriendList(userId int64) ([]*FriendInvite, error) {
-	//TODO implement me
-	panic("implement me")
+	var sql = fmt.Sprintf("select %s from %s where user_id = ?", friendInviteColumns, friendInviteTableName)
+	one, err := f.DatabaseTpl.FindList(context.Background(), sql, FriendInvite{}, userId)
+	if err != nil {
+		return nil, err
+	}
+	if len(one) == 0 {
+		// 没有数据，返回空集合
+		return []*FriendInvite{}, nil
+	}
+	var friendInvites []*FriendInvite
+	for _, item := range one {
+		friendInvites = append(friendInvites, item.(*FriendInvite))
+	}
+	return friendInvites, nil
 }
