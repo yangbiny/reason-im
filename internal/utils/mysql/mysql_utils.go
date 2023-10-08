@@ -20,19 +20,27 @@ func NewDatabaseTpl(db *sql.DB) *DatabaseTpl {
 	}
 }
 
-func (databaseTpl *DatabaseTpl) Insert(ctx context.Context, sql string, opts ...any) (int64, error) {
-	connection, err := mysql.GetConnection(ctx, databaseTpl.Db)
-	if err != nil {
-		return 0, errors.WithStack(err)
+func (databaseTpl *DatabaseTpl) prepareContext(ctx context.Context, sqlStr string) (*sql.Stmt, error) {
+	tx := ctx.Value("tx")
+	if tx != nil {
+		return tx.(Transaction).PrepareContext(ctx, sqlStr)
+	} else {
+		connection, err := mysql.GetConnection(ctx, databaseTpl.Db)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return connection.PrepareContext(ctx, sqlStr)
 	}
-	defer mysql.CloseMysqlConn(connection, ctx)
-	prepareContext, err := connection.PrepareContext(ctx, sql)
+}
+
+func (databaseTpl *DatabaseTpl) Insert(ctx context.Context, sqlStr string, opts ...any) (int64, error) {
+	prepareContext, err := databaseTpl.prepareContext(ctx, sqlStr)
 	if err != nil {
 		return 0, errors.WithStack(err)
 	}
 	result, err := prepareContext.Exec(opts...)
 	if err != nil {
-		logger.Error(ctx, "execute sql has failed", "sql", sql, "opts", opts)
+		logger.Error(ctx, "execute sqlStr has failed", "sqlStr", sqlStr, "opts", opts)
 		return 0, errors.WithStack(err)
 	}
 	id, _ := result.LastInsertId()
@@ -40,11 +48,16 @@ func (databaseTpl *DatabaseTpl) Insert(ctx context.Context, sql string, opts ...
 }
 
 func (databaseTpl *DatabaseTpl) FindOne(ctx context.Context, sql string, renderResult interface{}, opts ...any) (interface{}, error) {
-	connection, err := mysql.GetConnection(ctx, databaseTpl.Db)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	queryContext, err := connection.QueryContext(ctx, sql, opts...)
+	prepareContext, err := databaseTpl.prepareContext(ctx, sql)
+	defer func() {
+		if rec := recover(); rec != nil {
+			var err error
+			if as := errors.As(rec.(error), &err); as {
+				logger.ErrorWithErr(ctx, "execute has failed", errors.WithStack(err))
+			}
+		}
+	}()
+	queryContext, err := prepareContext.QueryContext(ctx, opts...)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -55,12 +68,7 @@ func (databaseTpl *DatabaseTpl) FindOne(ctx context.Context, sql string, renderR
 }
 
 func (databaseTpl *DatabaseTpl) Update(ctx context.Context, sql string, ops ...any) (int64, error) {
-	connection, err := mysql.GetConnection(ctx, databaseTpl.Db)
-	if err != nil {
-		return 0, errors.WithStack(err)
-	}
-	defer mysql.CloseMysqlConn(connection, ctx)
-	prepareContext, err := connection.PrepareContext(ctx, sql)
+	prepareContext, err := databaseTpl.prepareContext(ctx, sql)
 	if err != nil {
 		return 0, errors.WithStack(err)
 	}
@@ -72,11 +80,8 @@ func (databaseTpl *DatabaseTpl) Update(ctx context.Context, sql string, ops ...a
 }
 
 func (databaseTpl *DatabaseTpl) FindList(ctx context.Context, sql string, renderResult interface{}, opts ...any) ([]interface{}, error) {
-	connection, err := mysql.GetConnection(ctx, databaseTpl.Db)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	queryContext, err := connection.QueryContext(ctx, sql, opts...)
+	prepareContext, err := databaseTpl.prepareContext(ctx, sql)
+	queryContext, err := prepareContext.QueryContext(ctx, opts...)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

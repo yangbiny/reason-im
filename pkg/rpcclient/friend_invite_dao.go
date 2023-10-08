@@ -65,7 +65,7 @@ func (f FriendInviteDaoImpl) GetFriendInviteInfo(ctx context.Context, userId int
 }
 
 func (f FriendInviteDaoImpl) UpdateInvite(ctx context.Context, cmd *FriendInvite) (bool, error) {
-	var sql = fmt.Sprintf("update %s set status = ?,extra = ?,gmt_update where id = ?", friendInviteTableName)
+	var sql = fmt.Sprintf("update %s set status = ?,extra = ?,gmt_update = ? where id = ?", friendInviteTableName)
 	update, err := f.DatabaseTpl.Update(ctx, sql, cmd.Status, cmd.Extra, cmd.GmtUpdate, cmd.Id)
 	if err != nil {
 		return false, err

@@ -73,14 +73,17 @@ func RenderResult(rows *sql.Rows, resultType interface{}) interface{} {
 }
 
 func setValue(field reflect.Value, value interface{}, valueType *sql.ColumnType) {
-	switch valueType.DatabaseTypeName() {
-	case "INT", "INTEGER":
+	t := field.Type()
+	kind := t.Kind()
+	switch kind {
+	case reflect.Int64, reflect.Int8, reflect.Int32, reflect.Int16:
 		field.SetInt(value.(int64))
-	case "VARCHAR", "TEXT":
+	case reflect.String:
 		field.SetString(string(value.([]byte)))
-	case "FLOAT":
+	case reflect.Float64, reflect.Float32:
 		field.SetFloat(value.(float64))
-	case "DATETIME", "TIMESTAMP":
+	}
+	if kind == reflect.Struct && t == reflect.TypeOf(time.Time{}) {
 		var t time.Time
 		if t1, ok := value.(time.Time); ok {
 			t = t1
