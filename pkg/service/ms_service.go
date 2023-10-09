@@ -24,10 +24,12 @@ func MSService(write http.ResponseWriter, request *http.Request, cmd *MSServiceC
 		return false, errors.WithStack(errors.New("不能和自己 聊天"))
 	}
 
-	var upgrade, err = (&websocket.Upgrader{}).Upgrade(write, request, nil)
+	// 将Http 请求升级到 websocket 协议
+	var conn, err = (&websocket.Upgrader{}).Upgrade(write, request, nil)
 	if err != nil {
 		return false, errors.WithStack(err)
 	}
-	clients[upgrade] = true
+	clients[conn] = true
+
 	return true, nil
 }
