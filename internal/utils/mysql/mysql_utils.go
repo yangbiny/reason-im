@@ -101,7 +101,7 @@ func (databaseTpl *DatabaseTpl) WithTransaction(ctx *context.Context, f func(tx 
 	defer func(ctx context.Context, tx *sql.Tx) {
 		err := tx.Rollback()
 		if err != nil {
-			logger.Error(ctx, "", err)
+			logger.Error(ctx, "", errors.WithStack(err))
 		}
 	}(*ctx, tx)
 	if err != nil {

@@ -16,12 +16,16 @@ func NewUserService(userDao rpcclient.UserDao) UserService {
 	}
 }
 
-func (userService UserService) NewUser(user *rpcclient.User) (*rpcclient.User, error) {
-	return userService.UserDao.NewUser(user)
+func (userService UserService) NewUser(ctx *gin.Context, cmd *NewUserCmd) (*rpcclient.User, error) {
+	// 创建用户信息
+	user := rpcclient.User{
+		Name: cmd.Name,
+	}
+	return userService.UserDao.NewUser(&user)
 }
 
-func (userService UserService) GetUserInfo(userId int64) (*rpcclient.User, error) {
-	return userService.UserDao.GetUserInfo(userId)
+func (userService UserService) GetUserInfo(ctx *gin.Context, userId *int64) (*rpcclient.User, error) {
+	return userService.UserDao.GetUserInfo(*userId)
 }
 
 func (userService UserService) Login(c *gin.Context, user *UserLoginCmd) (bool, error) {
@@ -40,6 +44,11 @@ func (userService UserService) Login(c *gin.Context, user *UserLoginCmd) (bool, 
 }
 
 type UserLoginCmd struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+type NewUserCmd struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 }

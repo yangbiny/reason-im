@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"reason-im/internal/utils/logger"
 	mysql2 "reason-im/internal/utils/mysql"
@@ -46,7 +47,7 @@ func NewFriendInviteService(
 	}
 }
 
-func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendInvite, error) {
+func (service *FriendInviteService) InviteFriend(ctx *gin.Context, cmd *InviteFriendCmd) (*FriendInvite, error) {
 	if cmd.UserId == cmd.FriendId {
 		return nil, errors.WithStack(fmt.Errorf("不能添加自己为好友"))
 	}
@@ -101,7 +102,7 @@ func (service *FriendInviteService) InviteFriend(cmd *InviteFriendCmd) (*FriendI
 	return inviteInfo, nil
 }
 
-func (service *FriendInviteService) ReceiveInvite(cmd *ReceiveInviteCmd) (bool, error) {
+func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *ReceiveInviteCmd) (bool, error) {
 	background := context.Background()
 	invite, err := service.friendInviteDao.QueryInvite(background, cmd.InviteId)
 	if err != nil {
@@ -143,6 +144,31 @@ func (service *FriendInviteService) ReceiveInvite(cmd *ReceiveInviteCmd) (bool, 
 	return true, nil
 }
 
+func (service *FriendInviteService) RejectInvite(ctx *gin.Context, cmd *RejectInviteCmd) (bool, error) {
+	background := context.Background()
+	invite, err := service.friendInviteDao.QueryInvite(background, cmd.InviteId)
+	if err != nil {
+		return false, errors.WithStack(fmt.Errorf("邀请信息不存在"))
+	}
+	if invite == nil || invite.UserId != cmd.UserId {
+		return false, nil
+		//return false, errors.WithStack(fmt.Errorf("邀请信息不存在"))
+	}
+	if invite.Status != model.INVITE {
+		return false, errors.WithStack(fmt.Errorf("邀请信息已经处理过了"))
+	}
+	invite.RejectInvite()
+	_, err = service.friendInviteDao.UpdateInvite(background, invite)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (service *FriendService) QueryFriends(ctx *gin.Context, cmd *QueryFriendCmd) ([]*Friend, error) {
+	panic("")
+}
+
 type InviteFriendCmd struct {
 	UserId   int64  `login_user_id:"user_id"`
 	FriendId int64  `json:"friend_id"`
@@ -152,4 +178,12 @@ type InviteFriendCmd struct {
 type ReceiveInviteCmd struct {
 	InviteId int64 `json:"invite_id"`
 	UserId   int64 `login_user_id:"user_id"`
+}
+
+type RejectInviteCmd struct {
+	InviteId int64 `json:"invite_id"`
+	UserId   int64 `login_user_id:"user_id"`
+}
+
+type QueryFriendCmd struct {
 }

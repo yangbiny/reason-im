@@ -26,17 +26,17 @@ type ApiResp struct {
 }
 
 func Call[A, B any](
-	function func(req A) (B, error),
+	function func(c *gin.Context, req A) (B, error),
 	c *gin.Context,
 	req A,
 ) {
-	if err := c.BindJSON(req); err != nil {
+	if err := c.Bind(req); err != nil {
 		logger.Error(c, "bind req has failed", "req", req)
 		ResponseWithParamInvalid(c, err.Error())
 		return
 	}
 	renderLoginUserId(c, req)
-	data, err := function(req)
+	data, err := function(c, req)
 	if err != nil {
 		logger.ErrorWithErr(c, "execute has failed : ", err)
 		c.JSON(wrapWithServiceError(err))
@@ -70,7 +70,7 @@ func CallWithContext[A, B any](
 	c *gin.Context,
 	req A,
 ) {
-	if err := c.BindJSON(req); err != nil {
+	if err := c.Bind(req); err != nil {
 		logger.Error(c, "bind req has failed", "req", req)
 		ResponseWithParamInvalid(c, err.Error())
 		return

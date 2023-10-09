@@ -31,7 +31,7 @@ func InitInviteFriendService() service.FriendInviteService {
 	friendInviteDao := rpcclient.NewFriendInviteDao(databaseTpl)
 	friendDao := rpcclient.NewFriendDao(databaseTpl)
 	userDao := rpcclient.NewUserDao(databaseTpl)
-	friendInviteService := service.NewFriendInviteService(friendInviteDao, friendDao, userDao)
+	friendInviteService := service.NewFriendInviteService(friendInviteDao, friendDao, userDao, databaseTpl)
 	return friendInviteService
 }
 

@@ -53,7 +53,7 @@ func (friend *FriendInvite) ReceiveInvite() {
 	friend.GmtUpdate = time.Now()
 }
 
-func (friend *FriendInvite) RejectFriend() {
+func (friend *FriendInvite) RejectInvite() {
 	friend.Status = REJECT
 	friend.GmtUpdate = time.Now()
 }
