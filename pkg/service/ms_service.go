@@ -6,9 +6,12 @@ import (
 	"net/http"
 )
 
+type WsService struct {
+	conn *websocket.Conn
+}
+
 type Message struct {
-	Msg  string
-	Conn *websocket.Conn
+	Msg string
 }
 
 type MSServiceCmd struct {
@@ -17,7 +20,6 @@ type MSServiceCmd struct {
 }
 
 var clients = make(map[*websocket.Conn]bool)
-var broadcast = make(chan Message)
 
 func MSService(write http.ResponseWriter, request *http.Request, cmd *MSServiceCmd) (bool, error) {
 	if cmd.UserId == cmd.FriendId {
