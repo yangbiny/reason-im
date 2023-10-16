@@ -29,7 +29,7 @@ func withTagName(tag string) viper.DecoderConfigOption {
 
 func init() {
 	viper.SetConfigType("yaml")
-	viper.SetConfigFile("/Volumes/workspace/admin/reason-im/config/config.yaml")
+	viper.SetConfigFile("/Users/knowreason/object/admin/reason-im/config/config.yaml")
 	if err := viper.ReadInConfig(); err != nil {
 		panic("读取配置文件失败")
 	}
