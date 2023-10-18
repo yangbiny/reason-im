@@ -50,7 +50,7 @@ func CallMS[A, B any](
 	function func(write http.ResponseWriter, request *http.Request, req A) (B, error),
 	req A,
 ) {
-	if err := c.BindJSON(req); err != nil {
+	if err := c.Bind(req); err != nil {
 		logger.Error(c, "bind req has failed", "req", req)
 		ResponseWithParamInvalid(c, err.Error())
 		return

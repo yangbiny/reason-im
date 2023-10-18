@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	reason_im "reason-im"
+	reasonim "reason-im"
 	"reason-im/internal/config/web"
 	service2 "reason-im/internal/service"
 	"reason-im/internal/utils/caller"
@@ -18,7 +18,7 @@ func NewGinRouter() *gin.Engine {
 		return nil
 	}
 	// user
-	userService := reason_im.InitUserService()
+	userService := reasonim.InitUserService()
 	userGroup := engine.Group("/user")
 	{
 		userGroup.POST("/register/", onEvent(new(service2.NewUserCmd), userService.NewUser))
@@ -27,8 +27,8 @@ func NewGinRouter() *gin.Engine {
 	}
 
 	// friend
-	inviteFriendService := reason_im.InitInviteFriendService()
-	friendService := reason_im.InitFriendService()
+	inviteFriendService := reasonim.InitInviteFriendService()
+	friendService := reasonim.InitFriendService()
 	friendGroup := engine.Group("/friend", web.Authorize())
 	{
 		friendGroup.POST("/invite/", onEvent(new(service2.InviteFriendCmd), inviteFriendService.InviteFriend))
@@ -39,7 +39,16 @@ func NewGinRouter() *gin.Engine {
 		friendGroup.POST("/query/list/", onEvent(new(service2.QueryFriendCmd), friendService.QueryFriends))
 	}
 
-	//engine.GET("ws/msg/")
+	hub := service2.NewHub()
+	go hub.Run()
+	ws := engine.Group("/ws/", web.Authorize())
+	{
+		ws.GET("msg/", func(c *gin.Context) {
+			cmd := new(service2.MessageCmd)
+			_ = c.Bind(cmd)
+			service2.ServeWs(hub, cmd, c.Writer, c.Request)
+		})
+	}
 	return engine
 }
 
@@ -47,8 +56,4 @@ func onEvent[Req, Resp any](req Req, pairs func(ctx *gin.Context, command Req) (
 	return func(c *gin.Context) {
 		caller.Call(pairs, c, req)
 	}
-}
-
-func onWSRequest(c *gin.Context) {
-	caller.CallMS(c, service2.MSService, new(service2.MSServiceCmd))
 }
