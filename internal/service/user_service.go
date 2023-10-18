@@ -3,28 +3,28 @@ package service
 import (
 	"github.com/gin-gonic/gin"
 	"reason-im/internal/config/web"
-	"reason-im/pkg/rpcclient"
+	"reason-im/internal/repo"
 )
 
 type UserService struct {
-	UserDao rpcclient.UserDao
+	UserDao repo.UserDao
 }
 
-func NewUserService(userDao rpcclient.UserDao) UserService {
+func NewUserService(userDao repo.UserDao) UserService {
 	return UserService{
 		UserDao: userDao,
 	}
 }
 
-func (userService UserService) NewUser(ctx *gin.Context, cmd *NewUserCmd) (*rpcclient.User, error) {
+func (userService UserService) NewUser(ctx *gin.Context, cmd *NewUserCmd) (*repo.User, error) {
 	// 创建用户信息
-	user := rpcclient.User{
+	user := repo.User{
 		Name: cmd.Name,
 	}
 	return userService.UserDao.NewUser(&user)
 }
 
-func (userService UserService) GetUserInfo(ctx *gin.Context, userId *int64) (*rpcclient.User, error) {
+func (userService UserService) GetUserInfo(ctx *gin.Context, userId *int64) (*repo.User, error) {
 	return userService.UserDao.GetUserInfo(*userId)
 }
 

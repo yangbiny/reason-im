@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"reason-im/internal/repo"
 	"reason-im/internal/utils/logger"
 	mysql2 "reason-im/internal/utils/mysql"
 	"reason-im/pkg/model"
-	"reason-im/pkg/rpcclient"
 	"time"
 )
 
 type FriendService struct {
-	friendDao rpcclient.FriendDao
+	friendDao repo.FriendDao
 }
 
 type FriendInviteService struct {
-	friendInviteDao rpcclient.FriendInviteDao
-	friendDao       rpcclient.FriendDao
-	userDao         rpcclient.UserDao
+	friendInviteDao repo.FriendInviteDao
+	friendDao       repo.FriendDao
+	userDao         repo.UserDao
 	databaseTpl     *mysql2.DatabaseTpl
 }
 
@@ -27,16 +27,16 @@ type FriendInvite = model.FriendInvite
 
 type Friend = model.Friend
 
-func NewFriendService(friendDao rpcclient.FriendDao) FriendService {
+func NewFriendService(friendDao repo.FriendDao) FriendService {
 	return FriendService{
 		friendDao: friendDao,
 	}
 }
 
 func NewFriendInviteService(
-	friendInviteDao rpcclient.FriendInviteDao,
-	friendDao rpcclient.FriendDao,
-	userDao rpcclient.UserDao,
+	friendInviteDao repo.FriendInviteDao,
+	friendDao repo.FriendDao,
+	userDao repo.UserDao,
 	tpl *mysql2.DatabaseTpl,
 ) FriendInviteService {
 	return FriendInviteService{

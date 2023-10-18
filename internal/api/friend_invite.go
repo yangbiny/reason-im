@@ -1,7 +1,7 @@
 package api
 
 import (
-	"reason-im/pkg/service"
+	"reason-im/internal/service"
 )
 
 type FriendInviteApi struct {

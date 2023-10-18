@@ -5,9 +5,9 @@ import (
 	"github.com/pkg/errors"
 	reason_im "reason-im"
 	"reason-im/internal/config/web"
+	service2 "reason-im/internal/service"
 	"reason-im/internal/utils/caller"
 	"reason-im/internal/utils/logger"
-	"reason-im/pkg/service"
 )
 
 func NewGinRouter() *gin.Engine {
@@ -21,9 +21,9 @@ func NewGinRouter() *gin.Engine {
 	userService := reason_im.InitUserService()
 	userGroup := engine.Group("/user")
 	{
-		userGroup.POST("/register/", onEvent(new(service.NewUserCmd), userService.NewUser))
+		userGroup.POST("/register/", onEvent(new(service2.NewUserCmd), userService.NewUser))
 		userGroup.GET("/query/", onEvent(new(int64), userService.GetUserInfo))
-		userGroup.POST("/login/", onEvent(new(service.UserLoginCmd), userService.Login))
+		userGroup.POST("/login/", onEvent(new(service2.UserLoginCmd), userService.Login))
 	}
 
 	// friend
@@ -31,12 +31,12 @@ func NewGinRouter() *gin.Engine {
 	friendService := reason_im.InitFriendService()
 	friendGroup := engine.Group("/friend", web.Authorize())
 	{
-		friendGroup.POST("/invite/", onEvent(new(service.InviteFriendCmd), inviteFriendService.InviteFriend))
-		friendGroup.POST("/invite/receive/", onEvent(new(service.ReceiveInviteCmd), inviteFriendService.ReceiveInvite))
-		friendGroup.POST("/invite/reject/", onEvent(new(service.RejectInviteCmd), inviteFriendService.RejectInvite))
+		friendGroup.POST("/invite/", onEvent(new(service2.InviteFriendCmd), inviteFriendService.InviteFriend))
+		friendGroup.POST("/invite/receive/", onEvent(new(service2.ReceiveInviteCmd), inviteFriendService.ReceiveInvite))
+		friendGroup.POST("/invite/reject/", onEvent(new(service2.RejectInviteCmd), inviteFriendService.RejectInvite))
 
 		//friendGroup.POST("/delete/", friendApi.DeleteFriend)
-		friendGroup.POST("/query/list/", onEvent(new(service.QueryFriendCmd), friendService.QueryFriends))
+		friendGroup.POST("/query/list/", onEvent(new(service2.QueryFriendCmd), friendService.QueryFriends))
 	}
 
 	//engine.GET("ws/msg/")
@@ -50,5 +50,5 @@ func onEvent[Req, Resp any](req Req, pairs func(ctx *gin.Context, command Req) (
 }
 
 func onWSRequest(c *gin.Context) {
-	caller.CallMS(c, service.MSService, new(service.MSServiceCmd))
+	caller.CallMS(c, service2.MSService, new(service2.MSServiceCmd))
 }

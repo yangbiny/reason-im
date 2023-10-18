@@ -5,39 +5,39 @@ package reason_im
 import (
 	"github.com/google/wire"
 	"reason-im/internal/config/mysql"
+	"reason-im/internal/repo"
+	service2 "reason-im/internal/service"
 	mysql2 "reason-im/internal/utils/mysql"
-	"reason-im/pkg/rpcclient"
-	"reason-im/pkg/service"
 )
 
 var datasource = mysql.Datasource()
 var tpl = mysql2.NewDatabaseTpl(datasource)
 
-func InitUserService() service.UserService {
+func InitUserService() service2.UserService {
 	wire.Build(
-		service.NewUserService,
-		rpcclient.NewUserDao,
+		service2.NewUserService,
+		repo.NewUserDao,
 		wire.Value(tpl),
 	)
-	return service.UserService{}
+	return service2.UserService{}
 }
 
-func InitInviteFriendService() service.FriendInviteService {
+func InitInviteFriendService() service2.FriendInviteService {
 	wire.Build(
-		service.NewFriendInviteService,
-		rpcclient.NewFriendInviteDao,
-		rpcclient.NewFriendDao,
-		rpcclient.NewUserDao,
+		service2.NewFriendInviteService,
+		repo.NewFriendInviteDao,
+		repo.NewFriendDao,
+		repo.NewUserDao,
 		wire.Value(tpl),
 	)
-	return service.FriendInviteService{}
+	return service2.FriendInviteService{}
 }
 
-func InitFriendService() service.FriendService {
+func InitFriendService() service2.FriendService {
 	wire.Build(
-		service.NewFriendService,
-		rpcclient.NewFriendDao,
+		service2.NewFriendService,
+		repo.NewFriendDao,
 		wire.Value(tpl),
 	)
-	return service.FriendService{}
+	return service2.FriendService{}
 }

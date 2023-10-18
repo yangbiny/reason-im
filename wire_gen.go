@@ -8,16 +8,16 @@ package reason_im
 
 import (
 	"reason-im/internal/config/mysql"
+	"reason-im/internal/repo"
+	"reason-im/internal/service"
 	mysql2 "reason-im/internal/utils/mysql"
-	"reason-im/pkg/rpcclient"
-	"reason-im/pkg/service"
 )
 
 // Injectors from wire.go:
 
 func InitUserService() service.UserService {
 	databaseTpl := _wireDatabaseTplValue
-	userDao := rpcclient.NewUserDao(databaseTpl)
+	userDao := repo.NewUserDao(databaseTpl)
 	userService := service.NewUserService(userDao)
 	return userService
 }
@@ -28,9 +28,9 @@ var (
 
 func InitInviteFriendService() service.FriendInviteService {
 	databaseTpl := _wireMysqlDatabaseTplValue
-	friendInviteDao := rpcclient.NewFriendInviteDao(databaseTpl)
-	friendDao := rpcclient.NewFriendDao(databaseTpl)
-	userDao := rpcclient.NewUserDao(databaseTpl)
+	friendInviteDao := repo.NewFriendInviteDao(databaseTpl)
+	friendDao := repo.NewFriendDao(databaseTpl)
+	userDao := repo.NewUserDao(databaseTpl)
 	friendInviteService := service.NewFriendInviteService(friendInviteDao, friendDao, userDao, databaseTpl)
 	return friendInviteService
 }
@@ -41,7 +41,7 @@ var (
 
 func InitFriendService() service.FriendService {
 	databaseTpl := _wireDatabaseTplValue2
-	friendDao := rpcclient.NewFriendDao(databaseTpl)
+	friendDao := repo.NewFriendDao(databaseTpl)
 	friendService := service.NewFriendService(friendDao)
 	return friendService
 }
