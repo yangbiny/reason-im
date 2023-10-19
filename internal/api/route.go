@@ -39,14 +39,13 @@ func NewGinRouter() *gin.Engine {
 		friendGroup.POST("/query/list/", onEvent(new(service2.QueryFriendCmd), friendService.QueryFriends))
 	}
 
-	hub := service2.NewHub()
-	go hub.Run()
 	ws := engine.Group("/ws/", web.Authorize())
 	{
 		ws.GET("msg/", func(c *gin.Context) {
 			cmd := new(service2.MessageCmd)
-			_ = c.Bind(cmd)
-			service2.ServeWs(hub, cmd, c.Writer, c.Request)
+			_ = c.BindQuery(cmd)
+			cmd.UserId = c.GetInt64("login_user_id")
+			service2.ServeWs(cmd, c)
 		})
 	}
 	return engine
