@@ -69,7 +69,7 @@ func (h *Hub) onReceive(message []byte) {
 
 }
 
-func (h *Hub) Run() {
+func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
@@ -109,7 +109,7 @@ func ServeWs(cmd *MessageCmd, c *gin.Context) {
 	}
 
 	hub := NewHub(cmd.FriendId, cmd.UserId)
-	go hub.Run()
+	go hub.run()
 
 	client := &Client{hub: hub, conn: conn}
 
