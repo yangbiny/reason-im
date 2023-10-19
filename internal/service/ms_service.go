@@ -7,9 +7,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"math/rand"
 	"reason-im/internal/utils/logger"
-	"strconv"
 )
 
 var UserHubs = make(map[int64]*Hub)
@@ -23,7 +21,6 @@ type Msg struct {
 type Client struct {
 	hub  *Hub
 	conn *websocket.Conn
-	send chan []byte
 }
 
 type Hub struct {
@@ -32,14 +29,16 @@ type Hub struct {
 	client     *Client
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan []byte
+	receive    chan []byte
+	write      chan []byte
 }
 
 func NewHub(toUserId, fromUserId int64) *Hub {
 	return &Hub{
 		ToUserId:   toUserId,
 		FromUserId: fromUserId,
-		broadcast:  make(chan []byte),
+		receive:    make(chan []byte),
+		write:      make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
@@ -52,11 +51,22 @@ func (h *Hub) onConnect(client *Client) {
 
 func (h *Hub) onDisconnect(c *Client) {
 	delete(UserHubs, h.FromUserId)
-	close(c.send)
+	close(c.hub.write)
 }
 
-func (h *Hub) onBroadcast(message []byte) {
-	h.client.send <- message
+func (h *Hub) onReceive(message []byte) {
+	var msg Msg
+	err := json.Unmarshal(message, &msg)
+	if err != nil {
+		logger.Error(nil, "unmarshal has failed", "err", err)
+		return
+	}
+	id := msg.FromUserId
+	hub, exist := UserHubs[id]
+	if exist {
+		hub.write <- message
+	}
+
 }
 
 func (h *Hub) Run() {
@@ -66,8 +76,8 @@ func (h *Hub) Run() {
 			h.onConnect(client)
 		case client := <-h.unregister:
 			h.onDisconnect(client)
-		case message := <-h.broadcast:
-			h.onBroadcast(message)
+		case message := <-h.receive:
+			h.onReceive(message)
 		}
 	}
 }
@@ -101,7 +111,7 @@ func ServeWs(cmd *MessageCmd, c *gin.Context) {
 	hub := NewHub(cmd.FriendId, cmd.UserId)
 	go hub.Run()
 
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte)}
+	client := &Client{hub: hub, conn: conn}
 
 	client.hub.register <- client
 
@@ -111,6 +121,7 @@ func ServeWs(cmd *MessageCmd, c *gin.Context) {
 
 func (c *Client) read() {
 	for {
+		println("read")
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			break
@@ -124,7 +135,7 @@ func (c *Client) read() {
 		toUserId := msg.ToUserId
 		hub, exist := UserHubs[toUserId]
 		if exist {
-			hub.broadcast <- message
+			hub.receive <- message
 		}
 	}
 	c.hub.unregister <- c
@@ -132,14 +143,14 @@ func (c *Client) read() {
 
 func (c *Client) write() {
 	for {
+		println("write")
 		select {
-		case message, ok := <-c.send:
+		case message, ok := <-c.hub.write:
 			if !ok {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			msg := strconv.AppendInt(message, int64(rand.Int()), 10)
-			c.conn.WriteMessage(websocket.TextMessage, msg)
+			c.conn.WriteMessage(websocket.TextMessage, message)
 		}
 	}
 }
