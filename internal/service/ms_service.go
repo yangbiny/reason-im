@@ -3,12 +3,22 @@ package service
 import (
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"math/rand"
-	"net/http"
+	"reason-im/internal/utils/logger"
 	"strconv"
 )
+
+var UserHubs = make(map[int64]*Hub)
+
+type Msg struct {
+	ToUserId   int64  `json:"to_user_id"`
+	FromUserId int64  `json:"from_user_id"`
+	Msg        string `json:"msg"`
+}
 
 type Client struct {
 	hub  *Hub
@@ -17,19 +27,36 @@ type Client struct {
 }
 
 type Hub struct {
-	clients    map[*Client]bool
+	FromUserId int64
+	ToUserId   int64
+	client     *Client
 	register   chan *Client
 	unregister chan *Client
 	broadcast  chan []byte
 }
 
-func NewHub() *Hub {
+func NewHub(toUserId, fromUserId int64) *Hub {
 	return &Hub{
+		ToUserId:   toUserId,
+		FromUserId: fromUserId,
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
 	}
+}
+
+func (h *Hub) onConnect(client *Client) {
+	UserHubs[h.FromUserId] = h
+	h.client = client
+}
+
+func (h *Hub) onDisconnect(c *Client) {
+	delete(UserHubs, h.FromUserId)
+	close(c.send)
+}
+
+func (h *Hub) onBroadcast(message []byte) {
+	h.client.send <- message
 }
 
 func (h *Hub) Run() {
@@ -47,32 +74,16 @@ func (h *Hub) Run() {
 
 type MessageCmd struct {
 	UserId   int64 `login_user_id:"user_id"`
-	FriendId int64 `json:"friend_id"`
+	FriendId int64 `form:"friend_id"`
 }
 
-func (h *Hub) onConnect(c *Client) {
-	h.clients[c] = true
-	fmt.Println("Client connected")
-}
-
-// Handle client disconnect
-func (h *Hub) onDisconnect(c *Client) {
-	delete(h.clients, c)
-	close(c.send)
-	fmt.Println("Client disconnected")
-}
-
-// Broadcast message to all clients
-func (h *Hub) onBroadcast(message []byte) {
-	for c := range h.clients {
-		c.send <- message
-	}
-}
-
-func ServeWs(hub *Hub, cmd *MessageCmd, w http.ResponseWriter, r *http.Request) {
-	/*	if cmd.UserId == cmd.FriendId {
+func ServeWs(cmd *MessageCmd, c *gin.Context) {
+	if cmd.UserId == cmd.FriendId {
+		c.AbortWithStatus(500)
 		return
-	}*/
+	}
+	w := c.Writer
+	r := c.Request
 	key := r.Header.Get("Sec-WebSocket-Key")
 	guid := "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
@@ -86,6 +97,9 @@ func ServeWs(hub *Hub, cmd *MessageCmd, w http.ResponseWriter, r *http.Request) 
 		fmt.Println(err)
 		return
 	}
+
+	hub := NewHub(cmd.FriendId, cmd.UserId)
+	go hub.Run()
 
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte)}
 
@@ -101,7 +115,17 @@ func (c *Client) read() {
 		if err != nil {
 			break
 		}
-		c.hub.broadcast <- message
+		var msg Msg
+		err = json.Unmarshal(message, &msg)
+		if err != nil {
+			logger.Error(nil, "unmarshal has failed", "err", err)
+			continue
+		}
+		toUserId := msg.ToUserId
+		hub, exist := UserHubs[toUserId]
+		if exist {
+			hub.broadcast <- message
+		}
 	}
 	c.hub.unregister <- c
 }
