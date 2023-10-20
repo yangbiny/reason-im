@@ -30,11 +30,12 @@ func Authorize() gin.HandlerFunc {
 		if err != nil {
 			logger.ErrorWithErr(ctx, "parse jwt token has failed", errors.WithStack(err))
 			ctx.Abort()
+			ctx.JSON(400, caller.ApiResp{Code: caller.ParamInvalid, Msg: "token已过期"})
 			return
 		}
 		if jwtToken == nil {
 			ctx.Abort()
-			ctx.JSON(400, caller.ApiResp{Code: caller.ParamInvalid, Msg: "未登录"})
+			ctx.JSON(400, caller.ApiResp{Code: caller.ParamInvalid, Msg: "token失效，请重新登录"})
 			return
 		}
 		ctx.Set("login_user_id", jwtToken.UserId)

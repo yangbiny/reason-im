@@ -2,7 +2,6 @@ package caller
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"reason-im/internal/utils/logger"
 	"reflect"
 )
@@ -30,70 +29,22 @@ func Call[A, B any](
 	c *gin.Context,
 	req A,
 ) {
+	err2 := c.ShouldBindUri(req)
+	if err2 != nil {
+		logger.Error(c, "bind uri has failed", "req", req)
+		ResponseWithParamInvalid(c, err2.Error())
+		return
+	}
 	if err := c.Bind(req); err != nil {
 		logger.Error(c, "bind req has failed", "req", req)
 		ResponseWithParamInvalid(c, err.Error())
 		return
 	}
+
 	renderLoginUserId(c, req)
 	data, err := function(c, req)
 	if err != nil {
 		logger.ErrorWithErr(c, "execute has failed : ", err)
-		c.JSON(wrapWithServiceError(err))
-		return
-	}
-	c.JSON(wrapWithExecuteSuccess(data))
-}
-
-func CallMS[A, B any](
-	c *gin.Context,
-	function func(write http.ResponseWriter, request *http.Request, req A) (B, error),
-	req A,
-) {
-	if err := c.Bind(req); err != nil {
-		logger.Error(c, "bind req has failed", "req", req)
-		ResponseWithParamInvalid(c, err.Error())
-		return
-	}
-	renderLoginUserId(c, req)
-	data, err := function(c.Writer, c.Request, req)
-	if err != nil {
-		logger.ErrorWithErr(c, "execute has failed : ", err)
-		c.JSON(wrapWithServiceError(err))
-		return
-	}
-	c.JSON(wrapWithExecuteSuccess(data))
-}
-
-func CallWithContext[A, B any](
-	function func(c *gin.Context, req A) (B, error),
-	c *gin.Context,
-	req A,
-) {
-	if err := c.Bind(req); err != nil {
-		logger.Error(c, "bind req has failed", "req", req)
-		ResponseWithParamInvalid(c, err.Error())
-		return
-	}
-	renderLoginUserId(c, req)
-	data, err := function(c, req)
-	if err != nil {
-		logger.ErrorWithErr(c, "execute has failed : ", err)
-		c.JSON(wrapWithServiceError(err))
-		return
-	}
-	c.JSON(wrapWithExecuteSuccess(data))
-}
-
-func CallWithParam[A, B any](
-	function func(req A) (B, error),
-	c *gin.Context,
-	req A,
-) {
-	renderLoginUserId(c, req)
-	data, err := function(req)
-	if err != nil {
-		logger.Error(c, "call function has failed", "req", req, "err", err)
 		c.JSON(wrapWithServiceError(err))
 		return
 	}
@@ -112,14 +63,6 @@ func wrapWithServiceError(err error) (int, any) {
 	return 200, ApiResp{
 		Code: ServiceError,
 		Msg:  err.Error(),
-		Data: nil,
-	}
-}
-
-func wrapWithParamsInvalid(msg string) (int, any) {
-	return 200, ApiResp{
-		Code: ParamInvalid,
-		Msg:  msg,
 		Data: nil,
 	}
 }

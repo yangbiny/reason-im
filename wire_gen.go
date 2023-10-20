@@ -18,7 +18,8 @@ import (
 func InitUserService() service.UserService {
 	databaseTpl := _wireDatabaseTplValue
 	userDao := repo.NewUserDao(databaseTpl)
-	userService := service.NewUserService(userDao)
+	friendDao := repo.NewFriendDao(databaseTpl)
+	userService := service.NewUserService(userDao, friendDao)
 	return userService
 }
 

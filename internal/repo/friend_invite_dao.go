@@ -21,11 +21,30 @@ type FriendInviteDao interface {
 	UpdateInvite(ctx context.Context, cmd *FriendInvite) (bool, error)
 	// QueryInviteFriendList 查询用户的 邀请列表
 	QueryInviteFriendList(ctx context.Context, userId int64) ([]*FriendInvite, error)
+	QueryBeInviteFriendList(ctx context.Context, userId int64) ([]*FriendInvite, error)
 	QueryInvite(ctx context.Context, id int64) (*FriendInvite, error)
 }
 
 type FriendInviteDaoImpl struct {
 	DatabaseTpl *mysql.DatabaseTpl
+}
+
+func (f FriendInviteDaoImpl) QueryBeInviteFriendList(ctx context.Context, userId int64) ([]*FriendInvite, error) {
+	var sql = fmt.Sprintf("select %s from %s where friend_id = ?", friendInviteColumns, friendInviteTableName)
+	one, err := f.DatabaseTpl.FindList(ctx, sql, FriendInvite{}, userId)
+	if err != nil {
+		return nil, err
+	}
+	if len(one) == 0 {
+		// 没有数据，返回空集合
+		return []*FriendInvite{}, nil
+	}
+	var friendInvites []*FriendInvite
+	for _, item := range one {
+		invite := item.(FriendInvite)
+		friendInvites = append(friendInvites, &invite)
+	}
+	return friendInvites, nil
 }
 
 func NewFriendInviteDao(tpl *mysql.DatabaseTpl) FriendInviteDao {
