@@ -19,4 +19,4 @@
 
 ## support
 
-会有一些 基础包的提供，在 [https://github.com/yangbiny/reason-commons]Github中
+会有一些 基础包的提供，在 [Githun](https://github.com/yangbiny/reason-commons)
