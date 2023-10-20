@@ -17,6 +17,7 @@ func InitUserService() service2.UserService {
 	wire.Build(
 		service2.NewUserService,
 		repo.NewUserDao,
+		repo.NewFriendDao,
 		wire.Value(tpl),
 	)
 	return service2.UserService{}

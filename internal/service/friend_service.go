@@ -8,6 +8,7 @@ import (
 	"reason-im/internal/repo"
 	"reason-im/internal/utils/logger"
 	mysql2 "reason-im/internal/utils/mysql"
+	"reason-im/pkg/dto/vo"
 	"reason-im/pkg/model"
 	"time"
 )
@@ -57,12 +58,12 @@ func (service *FriendInviteService) InviteFriend(ctx *gin.Context, cmd *InviteFr
 		return nil, err
 	}
 	if userInfo == nil {
-		logger.Err(context.Background(), "can not find login user Id : %d", cmd.UserId)
+		logger.Err(context.Background(), "can not find login user_vo Id : %d", cmd.UserId)
 		return nil, errors.WithStack(fmt.Errorf("找不到用户信息：%d", cmd.UserId))
 	}
 	friendUserInfo, _ := service.userDao.GetUserInfo(cmd.FriendId)
 	if friendUserInfo == nil {
-		logger.Err(context.Background(), "can not find friend user Id :%d ", cmd.FriendId)
+		logger.Err(context.Background(), "can not find friend user_vo Id :%d ", cmd.FriendId)
 		return nil, fmt.Errorf("找不到用户信息：%d", cmd.FriendId)
 	}
 	friendInfo, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
@@ -108,17 +109,26 @@ func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *Receive
 	if err != nil {
 		return false, err
 	}
-	if invite == nil || invite.UserId != cmd.UserId {
+	if invite == nil || invite.FriendId != cmd.UserId {
 		return false, errors.WithStack(fmt.Errorf("邀请信息不存在"))
 	}
 	if invite.Status != model.INVITE {
 		return false, errors.WithStack(fmt.Errorf("邀请信息已经处理过了"))
 	}
 
-	var friend = Friend{
+	var friend1 = Friend{
 		UserId:    invite.UserId,
 		FriendId:  invite.FriendId,
 		Remark:    invite.Extra,
+		Status:    model.NORMAL,
+		GmtCreate: time.Now(),
+		GmtUpdate: time.Now(),
+	}
+
+	var friend2 = Friend{
+		UserId:    invite.FriendId,
+		FriendId:  invite.UserId,
+		Remark:    "",
 		Status:    model.NORMAL,
 		GmtCreate: time.Now(),
 		GmtUpdate: time.Now(),
@@ -131,8 +141,9 @@ func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *Receive
 			_ = tx.Rollback()
 			return err
 		}
-		_, err = service.friendDao.NewFriend(&friend)
-		if err != nil {
+		_, err1 := service.friendDao.NewFriend(&friend1)
+		_, err2 := service.friendDao.NewFriend(&friend2)
+		if err1 != nil || err2 != nil {
 			_ = tx.Rollback()
 			return err
 		}
@@ -165,6 +176,37 @@ func (service *FriendInviteService) RejectInvite(ctx *gin.Context, cmd *RejectIn
 	return true, nil
 }
 
+func (service *FriendInviteService) QueryInviteList(ctx *gin.Context, cmd *QueryInviteCmd) ([]*vo.UserInviteVo, error) {
+	list, err := service.friendInviteDao.QueryBeInviteFriendList(ctx, cmd.UserId)
+	if err != nil {
+		return nil, err
+	}
+	var result []*vo.UserInviteVo
+	for _, invite := range list {
+		info, err := service.userDao.GetUserInfo(invite.UserId)
+		if err != nil {
+			logger.ErrorWithErr(ctx, "query has error", err)
+			continue
+		}
+		if info == nil {
+			continue
+		}
+		result = append(result, &vo.UserInviteVo{
+			Id:             invite.Id,
+			InviteUserId:   invite.UserId,
+			InviteUserName: info.Name,
+			InviteStatus:   int(invite.Status),
+			Extra:          invite.Extra,
+			GmtCreate:      invite.GmtCreate,
+		})
+	}
+	return result, nil
+}
+
+func (service *FriendService) DeleteFriend(ctx *gin.Context, cmd *DeleteFriendCmd) (bool, error) {
+	panic("")
+}
+
 func (service *FriendService) QueryFriends(ctx *gin.Context, cmd *QueryFriendCmd) ([]*Friend, error) {
 	panic("")
 }
@@ -185,5 +227,14 @@ type RejectInviteCmd struct {
 	UserId   int64 `login_user_id:"user_id"`
 }
 
+type QueryInviteCmd struct {
+	UserId int64 `login_user_id:"user_id" required:"true"`
+}
+
 type QueryFriendCmd struct {
+}
+
+type DeleteFriendCmd struct {
+	UserId   int64 `login_user_id:"user_id"`
+	FriendId int64 `json:"friend_id" binding:"required"`
 }

@@ -22,8 +22,12 @@ func NewGinRouter() *gin.Engine {
 	userGroup := engine.Group("/user")
 	{
 		userGroup.POST("/register/", onEvent(new(service2.NewUserCmd), userService.NewUser))
-		userGroup.GET("/query/", onEvent(new(int64), userService.GetUserInfo))
 		userGroup.POST("/login/", onEvent(new(service2.UserLoginCmd), userService.Login))
+	}
+
+	loginUserGroup := engine.Group("/user", web.Authorize())
+	{
+		loginUserGroup.GET("/query/relation/:query_uid/", onEvent(new(service2.QueryUserCmd), userService.GetUserInfo))
 	}
 
 	// friend
@@ -34,8 +38,8 @@ func NewGinRouter() *gin.Engine {
 		friendGroup.POST("/invite/", onEvent(new(service2.InviteFriendCmd), inviteFriendService.InviteFriend))
 		friendGroup.POST("/invite/receive/", onEvent(new(service2.ReceiveInviteCmd), inviteFriendService.ReceiveInvite))
 		friendGroup.POST("/invite/reject/", onEvent(new(service2.RejectInviteCmd), inviteFriendService.RejectInvite))
-
-		//friendGroup.POST("/delete/", friendApi.DeleteFriend)
+		friendGroup.GET("/invite/list/", onEvent(new(service2.QueryInviteCmd), inviteFriendService.QueryInviteList))
+		friendGroup.POST("/delete/", onEvent(new(service2.DeleteFriendCmd), friendService.DeleteFriend))
 		friendGroup.POST("/query/list/", onEvent(new(service2.QueryFriendCmd), friendService.QueryFriends))
 	}
 
