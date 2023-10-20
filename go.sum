@@ -227,6 +227,10 @@ github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/ugorji/go/codec v1.2.11 h1:BMaWp1Bb6fHwEtbplGBGJ498wD+LKlNSl25MjdZY4dU=
 github.com/ugorji/go/codec v1.2.11/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
+github.com/yangbiny/reason-commons v1.0.0 h1:KA7+8Ha5EDBbvepu+bUumpQUr9mY2PRbXkoDUJyzg+U=
+github.com/yangbiny/reason-commons v1.0.0/go.mod h1:1RYFiblu72kOd+sutJFdkH043jcgWVvRs/dkwaAiYUY=
+github.com/yangbiny/reason-commons v1.0.1 h1:4/G5TdQAEa4rtCVMV58mMkmUn59OqB/u7G3l2Qu994E=
+github.com/yangbiny/reason-commons v1.0.1/go.mod h1:gMk7HuG0lN3Ryh94Hsz3P03TJJEUeqNwOg+9iKAqHnM=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

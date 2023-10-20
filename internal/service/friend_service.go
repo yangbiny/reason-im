@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	slice_utils "github.com/yangbiny/reason-commons/slice"
 	"reason-im/internal/repo"
 	"reason-im/internal/utils/logger"
 	mysql2 "reason-im/internal/utils/mysql"
@@ -181,6 +182,9 @@ func (service *FriendInviteService) QueryInviteList(ctx *gin.Context, cmd *Query
 	if err != nil {
 		return nil, err
 	}
+	slice_utils.MapTo(list, func(invite *FriendInvite) int64 {
+		return invite.UserId
+	})
 	var result []*vo.UserInviteVo
 	for _, invite := range list {
 		info, err := service.userDao.GetUserInfo(invite.UserId)
