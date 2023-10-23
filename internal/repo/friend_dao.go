@@ -19,6 +19,7 @@ type DeleteFriendCmd struct {
 
 type FriendDao interface {
 	NewFriend(friend *Friend) (*Friend, error)
+	UpdateFriend(friend *Friend) (bool, error)
 	GetFriendInfo(friendId int64) (*Friend, error)
 	DeleteFriend(cmd DeleteFriendCmd) (bool, error)
 	QueryFriendList(userId int64) ([]*Friend, error)
@@ -33,6 +34,18 @@ func NewFriendDao(tpl *mysql2.DatabaseTpl) FriendDao {
 	return FriendDaoImpl{
 		DatabaseTpl: tpl,
 	}
+}
+
+func (dao FriendDaoImpl) UpdateFriend(friend *Friend) (bool, error) {
+	var sql = fmt.Sprintf("update %s set status = ?,remark = ?,gmt_update = ? where id = ?", friendTableName)
+	rows, err := dao.DatabaseTpl.Update(context.Background(), sql, friend.Status, friend.Remark, friend.GmtUpdate, friend.Id)
+	if err != nil {
+		return false, err
+	}
+	if rows == 0 {
+		return false, fmt.Errorf("update friend error")
+	}
+	return true, nil
 }
 
 func (dao FriendDaoImpl) NewFriend(friend *Friend) (*Friend, error) {

@@ -83,7 +83,7 @@ func (service *FriendInviteService) InviteFriend(ctx *gin.Context, cmd *InviteFr
 	if info != nil {
 		return nil, apierror.WhenParamError(fmt.Errorf("该用户已经是你的好友了"))
 	}
-	inviteInfo, err := service.friendInviteDao.GetFriendInviteInfo(context.Background(), cmd.UserId, cmd.FriendId)
+	inviteInfo, err := service.friendInviteDao.GetFriendInviteInfo(ctx, cmd.UserId, cmd.FriendId)
 	if err != nil {
 		return nil, apierror.WhenServiceError(err)
 	}
@@ -106,8 +106,7 @@ func (service *FriendInviteService) InviteFriend(ctx *gin.Context, cmd *InviteFr
 }
 
 func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *ReceiveInviteCmd) (bool, *apierror.ApiError) {
-	background := context.Background()
-	invite, err := service.friendInviteDao.QueryInvite(background, cmd.InviteId)
+	invite, err := service.friendInviteDao.QueryInvite(ctx, cmd.InviteId)
 	if err != nil {
 		return false, apierror.WhenServiceError(err)
 	}
@@ -136,9 +135,8 @@ func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *Receive
 		GmtUpdate: time.Now(),
 	}
 	invite.ReceiveInvite()
-
-	err = service.databaseTpl.WithTransaction(&background, func(tx mysql2.Transaction) error {
-		_, err = service.friendInviteDao.UpdateInvite(background, invite)
+	err = service.databaseTpl.WithTransaction(ctx, func(tx mysql2.Transaction) error {
+		_, err = service.friendInviteDao.UpdateInvite(ctx, invite)
 		if err != nil {
 			_ = tx.Rollback()
 			return err
@@ -158,8 +156,7 @@ func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *Receive
 }
 
 func (service *FriendInviteService) RejectInvite(ctx *gin.Context, cmd *RejectInviteCmd) (bool, *apierror.ApiError) {
-	background := context.Background()
-	invite, err := service.friendInviteDao.QueryInvite(background, cmd.InviteId)
+	invite, err := service.friendInviteDao.QueryInvite(ctx, cmd.InviteId)
 	if err != nil {
 		return false, apierror.WhenServiceError(err)
 	}
@@ -170,7 +167,7 @@ func (service *FriendInviteService) RejectInvite(ctx *gin.Context, cmd *RejectIn
 		return false, apierror.WhenParamError(fmt.Errorf("邀请信息已经处理过了"))
 	}
 	invite.RejectInvite()
-	_, err = service.friendInviteDao.UpdateInvite(background, invite)
+	_, err = service.friendInviteDao.UpdateInvite(ctx, invite)
 	if err != nil {
 		return false, apierror.WhenServiceError(err)
 	}
@@ -220,12 +217,21 @@ func (service *FriendService) DeleteFriend(ctx *gin.Context, cmd *DeleteFriendCm
 		logger.Info(ctx, "friend is delete")
 		return true, nil
 	}
+	info.DeleteFriend()
 
-	return true, nil
+	friend, err := service.friendDao.UpdateFriend(info)
+	if err != nil {
+		return false, apierror.WhenServiceError(err)
+	}
+	return friend, nil
 }
 
 func (service *FriendService) QueryFriends(ctx *gin.Context, cmd *QueryFriendCmd) ([]*Friend, *apierror.ApiError) {
-	panic("")
+	list, err := service.friendDao.QueryFriendList(cmd.UserId)
+	if err != nil {
+		return nil, apierror.WhenServiceError(err)
+	}
+	return list, nil
 }
 
 type InviteFriendCmd struct {
@@ -249,6 +255,7 @@ type QueryInviteCmd struct {
 }
 
 type QueryFriendCmd struct {
+	UserId int64 `login_user_id:"user_id" required:"true"`
 }
 
 type DeleteFriendCmd struct {
