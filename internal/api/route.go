@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/yangbiny/reason-commons/err"
 	reasonim "reason-im"
 	"reason-im/internal/config/web"
 	service2 "reason-im/internal/service"
@@ -55,7 +56,7 @@ func NewGinRouter() *gin.Engine {
 	return engine
 }
 
-func onEvent[Req, Resp any](req Req, pairs func(ctx *gin.Context, command Req) (Resp, error)) gin.HandlerFunc {
+func onEvent[Req, Resp any](req Req, pairs func(ctx *gin.Context, command Req) (Resp, *err.ApiError)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		caller.Call(pairs, c, req)
 	}

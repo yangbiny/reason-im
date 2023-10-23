@@ -13,9 +13,9 @@ import (
 var UserHubs = make(map[int64]*Hub)
 
 type Msg struct {
-	ToUserId   int64  `json:"to_user_id"`
-	FromUserId int64  `json:"from_user_id"`
-	Msg        string `json:"msg"`
+	ToUserId   int64  `json:"to_user_id" required:"true"`
+	FromUserId int64  `json:"from_user_id" required:"true"`
+	Msg        string `json:"msg" required:"true"`
 }
 
 type Client struct {
@@ -121,7 +121,6 @@ func ServeWs(cmd *MessageCmd, c *gin.Context) {
 
 func (c *Client) read() {
 	for {
-		println("read")
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			break
@@ -143,14 +142,19 @@ func (c *Client) read() {
 
 func (c *Client) write() {
 	for {
-		println("write")
 		select {
 		case message, ok := <-c.hub.write:
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err := c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					return
+				}
 				return
 			}
-			c.conn.WriteMessage(websocket.TextMessage, message)
+			err := c.conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				return
+			}
 		}
 	}
 }

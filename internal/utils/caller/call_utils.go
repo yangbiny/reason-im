@@ -2,6 +2,7 @@ package caller
 
 import (
 	"github.com/gin-gonic/gin"
+	apierror "github.com/yangbiny/reason-commons/err"
 	"reason-im/internal/utils/logger"
 	"reflect"
 )
@@ -25,7 +26,7 @@ type ApiResp struct {
 }
 
 func Call[A, B any](
-	function func(c *gin.Context, req A) (B, error),
+	function func(c *gin.Context, req A) (B, *apierror.ApiError),
 	c *gin.Context,
 	req A,
 ) {
@@ -44,8 +45,10 @@ func Call[A, B any](
 	renderLoginUserId(c, req)
 	data, err := function(c, req)
 	if err != nil {
-		logger.ErrorWithErr(c, "execute has failed : ", err)
-		c.JSON(wrapWithServiceError(err))
+		if err.ApiStatus == apierror.Fail {
+			logger.ErrorWithErr(c, "execute has failed : ", err.Err)
+		}
+		c.JSON(wrapWithServiceError(err.Err))
 		return
 	}
 	c.JSON(wrapWithExecuteSuccess(data))

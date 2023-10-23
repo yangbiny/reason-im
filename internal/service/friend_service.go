@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	slice_utils "github.com/yangbiny/reason-commons/slice"
+	apierror "github.com/yangbiny/reason-commons/err"
+	sliceutils "github.com/yangbiny/reason-commons/slice"
 	"reason-im/internal/repo"
 	"reason-im/internal/utils/logger"
 	mysql2 "reason-im/internal/utils/mysql"
@@ -49,42 +50,42 @@ func NewFriendInviteService(
 	}
 }
 
-func (service *FriendInviteService) InviteFriend(ctx *gin.Context, cmd *InviteFriendCmd) (*FriendInvite, error) {
+func (service *FriendInviteService) InviteFriend(ctx *gin.Context, cmd *InviteFriendCmd) (*FriendInvite, *apierror.ApiError) {
 	if cmd.UserId == cmd.FriendId {
-		return nil, errors.WithStack(fmt.Errorf("不能添加自己为好友"))
+		return nil, apierror.WhenParamError(errors.WithStack(fmt.Errorf("不能添加自己为好友")))
 	}
 	userInfo, err := service.userDao.GetUserInfo(cmd.UserId)
 	if err != nil {
 		logger.ErrorWithErr(context.Background(), "query has error", err)
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
 	if userInfo == nil {
 		logger.Err(context.Background(), "can not find login user_vo Id : %d", cmd.UserId)
-		return nil, errors.WithStack(fmt.Errorf("找不到用户信息：%d", cmd.UserId))
+		return nil, apierror.WhenParamError(fmt.Errorf("找不到用户信息：%d", cmd.UserId))
 	}
 	friendUserInfo, _ := service.userDao.GetUserInfo(cmd.FriendId)
 	if friendUserInfo == nil {
 		logger.Err(context.Background(), "can not find friend user_vo Id :%d ", cmd.FriendId)
-		return nil, fmt.Errorf("找不到用户信息：%d", cmd.FriendId)
+		return nil, apierror.WhenParamError(fmt.Errorf("找不到用户信息：%d", cmd.FriendId))
 	}
 	friendInfo, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
 	if err != nil {
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
 	if friendInfo != nil {
-		return nil, fmt.Errorf("该用户已经是你的好友了")
+		return nil, apierror.WhenParamError(fmt.Errorf("该用户已经是你的好友了"))
 	}
 
 	info, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
 	if err != nil {
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
 	if info != nil {
-		return nil, fmt.Errorf("该用户已经是你的好友了")
+		return nil, apierror.WhenParamError(fmt.Errorf("该用户已经是你的好友了"))
 	}
 	inviteInfo, err := service.friendInviteDao.GetFriendInviteInfo(context.Background(), cmd.UserId, cmd.FriendId)
 	if err != nil {
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
 	if inviteInfo != nil {
 		return &FriendInvite{
@@ -99,22 +100,22 @@ func (service *FriendInviteService) InviteFriend(ctx *gin.Context, cmd *InviteFr
 	}
 	inviteInfo, err = service.friendInviteDao.NewFriend(context.Background(), model.NewFriendInvite(cmd.UserId, cmd.FriendId))
 	if err != nil {
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
 	return inviteInfo, nil
 }
 
-func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *ReceiveInviteCmd) (bool, error) {
+func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *ReceiveInviteCmd) (bool, *apierror.ApiError) {
 	background := context.Background()
 	invite, err := service.friendInviteDao.QueryInvite(background, cmd.InviteId)
 	if err != nil {
-		return false, err
+		return false, apierror.WhenServiceError(err)
 	}
 	if invite == nil || invite.FriendId != cmd.UserId {
-		return false, errors.WithStack(fmt.Errorf("邀请信息不存在"))
+		return false, apierror.WhenParamError(fmt.Errorf("邀请信息不存在"))
 	}
 	if invite.Status != model.INVITE {
-		return false, errors.WithStack(fmt.Errorf("邀请信息已经处理过了"))
+		return false, apierror.WhenParamError(fmt.Errorf("邀请信息已经处理过了"))
 	}
 
 	var friend1 = Friend{
@@ -151,38 +152,37 @@ func (service *FriendInviteService) ReceiveInvite(ctx *gin.Context, cmd *Receive
 		return nil
 	})
 	if err != nil {
-		return false, err
+		return false, apierror.WhenServiceError(err)
 	}
 	return true, nil
 }
 
-func (service *FriendInviteService) RejectInvite(ctx *gin.Context, cmd *RejectInviteCmd) (bool, error) {
+func (service *FriendInviteService) RejectInvite(ctx *gin.Context, cmd *RejectInviteCmd) (bool, *apierror.ApiError) {
 	background := context.Background()
 	invite, err := service.friendInviteDao.QueryInvite(background, cmd.InviteId)
 	if err != nil {
-		return false, errors.WithStack(fmt.Errorf("邀请信息不存在"))
+		return false, apierror.WhenServiceError(err)
 	}
 	if invite == nil || invite.UserId != cmd.UserId {
-		return false, nil
-		//return false, errors.WithStack(fmt.Errorf("邀请信息不存在"))
+		return false, apierror.WhenParamError(fmt.Errorf("邀请信息不存在"))
 	}
 	if invite.Status != model.INVITE {
-		return false, errors.WithStack(fmt.Errorf("邀请信息已经处理过了"))
+		return false, apierror.WhenParamError(fmt.Errorf("邀请信息已经处理过了"))
 	}
 	invite.RejectInvite()
 	_, err = service.friendInviteDao.UpdateInvite(background, invite)
 	if err != nil {
-		return false, err
+		return false, apierror.WhenServiceError(err)
 	}
 	return true, nil
 }
 
-func (service *FriendInviteService) QueryInviteList(ctx *gin.Context, cmd *QueryInviteCmd) ([]*vo.UserInviteVo, error) {
+func (service *FriendInviteService) QueryInviteList(ctx *gin.Context, cmd *QueryInviteCmd) ([]*vo.UserInviteVo, *apierror.ApiError) {
 	list, err := service.friendInviteDao.QueryBeInviteFriendList(ctx, cmd.UserId)
 	if err != nil {
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
-	slice_utils.MapTo(list, func(invite *FriendInvite) int64 {
+	sliceutils.MapTo(list, func(invite *FriendInvite) int64 {
 		return invite.UserId
 	})
 	var result []*vo.UserInviteVo
@@ -207,11 +207,24 @@ func (service *FriendInviteService) QueryInviteList(ctx *gin.Context, cmd *Query
 	return result, nil
 }
 
-func (service *FriendService) DeleteFriend(ctx *gin.Context, cmd *DeleteFriendCmd) (bool, error) {
-	panic("")
+func (service *FriendService) DeleteFriend(ctx *gin.Context, cmd *DeleteFriendCmd) (bool, *apierror.ApiError) {
+	info, err := service.friendDao.QueryFriendInfo(cmd.UserId, cmd.FriendId)
+	if err != nil {
+		return false, apierror.WhenServiceError(err)
+	}
+	if info == nil {
+		return false, apierror.WhenParamError(fmt.Errorf("该用户不是你的好友"))
+	}
+
+	if info.IsDelete() {
+		logger.Info(ctx, "friend is delete")
+		return true, nil
+	}
+
+	return true, nil
 }
 
-func (service *FriendService) QueryFriends(ctx *gin.Context, cmd *QueryFriendCmd) ([]*Friend, error) {
+func (service *FriendService) QueryFriends(ctx *gin.Context, cmd *QueryFriendCmd) ([]*Friend, *apierror.ApiError) {
 	panic("")
 }
 

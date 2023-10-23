@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/gin-gonic/gin"
+	apierror "github.com/yangbiny/reason-commons/err"
 	"reason-im/internal/config/web"
 	"reason-im/internal/repo"
 	"reason-im/pkg/dto/vo"
@@ -19,23 +20,27 @@ func NewUserService(userDao repo.UserDao, fiendDao repo.FriendDao) UserService {
 	}
 }
 
-func (userService *UserService) NewUser(ctx *gin.Context, cmd *NewUserCmd) (*repo.User, error) {
+func (userService *UserService) NewUser(ctx *gin.Context, cmd *NewUserCmd) (*repo.User, *apierror.ApiError) {
 	// 创建用户信息
 	user := repo.User{
 		Name: cmd.Name,
 	}
-	return userService.UserDao.NewUser(&user)
+	newUser, err := userService.UserDao.NewUser(&user)
+	if err != nil {
+		return nil, apierror.WhenServiceError(err)
+	}
+	return newUser, nil
 }
 
-func (userService *UserService) GetUserInfo(ctx *gin.Context, cmd *QueryUserCmd) (*vo.UserRelationVo, error) {
+func (userService *UserService) GetUserInfo(ctx *gin.Context, cmd *QueryUserCmd) (*vo.UserRelationVo, *apierror.ApiError) {
 	info, err := userService.UserDao.GetUserInfo(cmd.QueryUid)
 	if err != nil {
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
 	id := info.Id
 	friendInfo, err := userService.UserFriendDao.QueryFriendInfo(cmd.UserId, id)
 	if err != nil {
-		return nil, err
+		return nil, apierror.WhenServiceError(err)
 	}
 	return &vo.UserRelationVo{
 		Id:        id,
@@ -45,17 +50,17 @@ func (userService *UserService) GetUserInfo(ctx *gin.Context, cmd *QueryUserCmd)
 	}, nil
 }
 
-func (userService *UserService) Login(c *gin.Context, user *UserLoginCmd) (bool, error) {
+func (userService *UserService) Login(c *gin.Context, user *UserLoginCmd) (bool, *apierror.ApiError) {
 	queryUser, err := userService.UserDao.QueryUserByName(user.Name)
 	if err != nil {
-		return false, err
+		return false, apierror.WhenServiceError(err)
 	}
 	if queryUser == nil {
 		return false, nil
 	}
 	err = web.GenerateJwtToken(c, queryUser.Name, queryUser.Id)
 	if err != nil {
-		return false, err
+		return false, apierror.WhenServiceError(err)
 	}
 	return true, nil
 }

@@ -62,3 +62,7 @@ func (friend *Friend) DeleteFriend() {
 	friend.Status = DELETE
 	friend.GmtUpdate = time.Now()
 }
+
+func (friend *Friend) IsDelete() bool {
+	return friend.Status == DELETE
+}
