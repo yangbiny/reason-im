@@ -44,6 +44,12 @@ func NewGinRouter() *gin.Engine {
 		friendGroup.POST("/query/list/", onEvent(new(service2.QueryFriendCmd), friendService.QueryFriends))
 	}
 
+	groupService := reasonim.InitGroupService()
+	imGroup := engine.Group("/group", web.Authorize())
+	{
+		imGroup.POST("/create/", onEvent(new(service2.CreateGroupCmd), groupService.NewGroup))
+	}
+
 	ws := engine.Group("/ws/", web.Authorize())
 	{
 		ws.GET("msg/", func(c *gin.Context) {

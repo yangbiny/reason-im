@@ -51,6 +51,17 @@ var (
 	_wireDatabaseTplValue2 = tpl
 )
 
+func InitGroupService() service.GroupService {
+	databaseTpl := _wireDatabaseTplValue3
+	groupDao := repo.NewGroupDao(databaseTpl)
+	groupService := service.NewGroupService(groupDao)
+	return groupService
+}
+
+var (
+	_wireDatabaseTplValue3 = tpl
+)
+
 // wire.go:
 
 var datasource = mysql.Datasource()
