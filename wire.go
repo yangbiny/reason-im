@@ -42,3 +42,12 @@ func InitFriendService() service2.FriendService {
 	)
 	return service2.FriendService{}
 }
+
+func InitGroupService() service2.GroupService {
+	wire.Build(
+		service2.NewGroupService,
+		repo.NewGroupDao,
+		wire.Value(tpl),
+	)
+	return service2.GroupService{}
+}
