@@ -8,6 +8,7 @@ import (
 )
 
 type Group = model.Group
+type GroupMember = model.GroupMember
 
 var columns = "id,name,description,group_type,group_member_cnt,gmt_create,gmt_update"
 var imGroupTableName = "im_group"
@@ -15,6 +16,10 @@ var imGroupTableName = "im_group"
 type GroupDao interface {
 	NewGroup(ctx *gin.Context, group *Group) (*Group, error)
 	FindById(ctx *gin.Context, id int64) (*Group, error)
+}
+
+type GroupMemberDao interface {
+	NewGroupMember(ctx *gin.Context, groupMember *GroupMember) (*GroupMember, error)
 }
 
 type GroupDaoImpl struct {
