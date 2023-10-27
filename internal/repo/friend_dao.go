@@ -18,12 +18,12 @@ type DeleteFriendCmd struct {
 }
 
 type FriendDao interface {
-	NewFriend(friend *Friend) (*Friend, error)
-	UpdateFriend(friend *Friend) (bool, error)
-	GetFriendInfo(friendId int64) (*Friend, error)
-	DeleteFriend(cmd DeleteFriendCmd) (bool, error)
-	QueryFriendList(userId int64) ([]*Friend, error)
-	QueryFriendInfo(userId int64, friendId int64) (*Friend, error)
+	NewFriend(ctx *context.Context, friend *Friend) (*Friend, error)
+	UpdateFriend(ctx *context.Context, friend *Friend) (bool, error)
+	GetFriendInfo(ctx *context.Context, friendId int64) (*Friend, error)
+	DeleteFriend(ctx *context.Context, cmd DeleteFriendCmd) (bool, error)
+	QueryFriendList(ctx *context.Context, userId int64) ([]*Friend, error)
+	QueryFriendInfo(ctx *context.Context, userId int64, friendId int64) (*Friend, error)
 }
 
 type FriendDaoImpl struct {
@@ -36,9 +36,9 @@ func NewFriendDao(tpl *mysql2.DatabaseTpl) FriendDao {
 	}
 }
 
-func (dao FriendDaoImpl) UpdateFriend(friend *Friend) (bool, error) {
+func (dao FriendDaoImpl) UpdateFriend(ctx *context.Context, friend *Friend) (bool, error) {
 	var sql = fmt.Sprintf("update %s set status = ?,remark = ?,gmt_update = ? where id = ?", friendTableName)
-	rows, err := dao.DatabaseTpl.Update(context.Background(), sql, friend.Status, friend.Remark, friend.GmtUpdate, friend.Id)
+	rows, err := dao.DatabaseTpl.Update(ctx, sql, friend.Status, friend.Remark, friend.GmtUpdate, friend.Id)
 	if err != nil {
 		return false, err
 	}
@@ -48,9 +48,9 @@ func (dao FriendDaoImpl) UpdateFriend(friend *Friend) (bool, error) {
 	return true, nil
 }
 
-func (dao FriendDaoImpl) NewFriend(friend *Friend) (*Friend, error) {
+func (dao FriendDaoImpl) NewFriend(ctx *context.Context, friend *Friend) (*Friend, error) {
 	var sql = fmt.Sprintf("insert into %s (user_id,friend_id,status,remark,gmt_create,gmt_update) values (?,?,?,?,?,?)", friendTableName)
-	insert, err := dao.DatabaseTpl.Insert(context.Background(), sql, friend.UserId, friend.FriendId, friend.Status, friend.Remark, friend.GmtCreate, friend.GmtUpdate)
+	insert, err := dao.DatabaseTpl.Insert(ctx, sql, friend.UserId, friend.FriendId, friend.Status, friend.Remark, friend.GmtCreate, friend.GmtUpdate)
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +58,9 @@ func (dao FriendDaoImpl) NewFriend(friend *Friend) (*Friend, error) {
 	return friend, nil
 }
 
-func (dao FriendDaoImpl) GetFriendInfo(friendId int64) (*Friend, error) {
+func (dao FriendDaoImpl) GetFriendInfo(ctx *context.Context, friendId int64) (*Friend, error) {
 	var sql = fmt.Sprintf("select %s from %s where id = ?", friendColumns, friendTableName)
-	one, err := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, friendId)
+	one, err := dao.DatabaseTpl.FindOne(ctx, sql, Friend{}, friendId)
 	if err != nil || one == nil {
 		return nil, err
 	}
@@ -68,18 +68,18 @@ func (dao FriendDaoImpl) GetFriendInfo(friendId int64) (*Friend, error) {
 	return &friend, nil
 }
 
-func (dao FriendDaoImpl) DeleteFriend(cmd DeleteFriendCmd) (bool, error) {
+func (dao FriendDaoImpl) DeleteFriend(ctx *context.Context, cmd DeleteFriendCmd) (bool, error) {
 	var sql = fmt.Sprintf("update %s set status = ? where id = ?", friendTableName)
-	rows, err := dao.DatabaseTpl.Update(context.Background(), sql, cmd.Status, cmd.Id)
+	rows, err := dao.DatabaseTpl.Update(ctx, sql, cmd.Status, cmd.Id)
 	if err != nil {
 		return false, err
 	}
 	return rows > 0, nil
 }
 
-func (dao FriendDaoImpl) QueryFriendList(userId int64) ([]*Friend, error) {
+func (dao FriendDaoImpl) QueryFriendList(ctx *context.Context, userId int64) ([]*Friend, error) {
 	var sql = fmt.Sprintf("select %s from %s where user_id = ?", friendColumns, friendTableName)
-	rows, err := dao.DatabaseTpl.FindList(context.Background(), sql, Friend{}, userId)
+	rows, err := dao.DatabaseTpl.FindList(ctx, sql, Friend{}, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -91,9 +91,9 @@ func (dao FriendDaoImpl) QueryFriendList(userId int64) ([]*Friend, error) {
 	return friends, nil
 }
 
-func (dao FriendDaoImpl) QueryFriendInfo(userId int64, friendId int64) (*Friend, error) {
+func (dao FriendDaoImpl) QueryFriendInfo(ctx *context.Context, userId int64, friendId int64) (*Friend, error) {
 	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = ?", friendColumns, friendTableName)
-	one, err := dao.DatabaseTpl.FindOne(context.Background(), sql, Friend{}, userId, friendId)
+	one, err := dao.DatabaseTpl.FindOne(ctx, sql, Friend{}, userId, friendId)
 	if err != nil || one == nil {
 		return nil, err
 	}

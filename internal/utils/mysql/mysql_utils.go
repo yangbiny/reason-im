@@ -20,44 +20,45 @@ func NewDatabaseTpl(db *sql.DB) *DatabaseTpl {
 	}
 }
 
-func (databaseTpl *DatabaseTpl) prepareContext(ctx context.Context, sqlStr string) (*sql.Stmt, error) {
-	tx := ctx.Value("tx")
+func (databaseTpl *DatabaseTpl) prepareContext(ctx *context.Context, sqlStr string) (*sql.Stmt, error) {
+	tx := (*ctx).Value("tx")
 	if tx != nil {
-		return tx.(Transaction).PrepareContext(ctx, sqlStr)
+		transaction := tx.(Transaction)
+		return transaction.PrepareContext(*ctx, sqlStr)
 	} else {
-		connection, err := mysql.GetConnection(ctx, databaseTpl.Db)
+		connection, err := mysql.GetConnection(*ctx, databaseTpl.Db)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		return connection.PrepareContext(ctx, sqlStr)
+		return connection.PrepareContext(*ctx, sqlStr)
 	}
 }
 
-func (databaseTpl *DatabaseTpl) Insert(ctx context.Context, sqlStr string, opts ...any) (int64, error) {
+func (databaseTpl *DatabaseTpl) Insert(ctx *context.Context, sqlStr string, opts ...any) (int64, error) {
 	prepareContext, err := databaseTpl.prepareContext(ctx, sqlStr)
 	if err != nil {
 		return 0, errors.WithStack(err)
 	}
 	result, err := prepareContext.Exec(opts...)
 	if err != nil {
-		logger.Error(ctx, "execute sqlStr has failed", "sqlStr", sqlStr, "opts", opts)
+		logger.Error(*ctx, "execute sqlStr has failed", "sqlStr", sqlStr, "opts", opts)
 		return 0, errors.WithStack(err)
 	}
 	id, _ := result.LastInsertId()
 	return id, nil
 }
 
-func (databaseTpl *DatabaseTpl) FindOne(ctx context.Context, sql string, renderResult interface{}, opts ...any) (interface{}, error) {
+func (databaseTpl *DatabaseTpl) FindOne(ctx *context.Context, sql string, renderResult interface{}, opts ...any) (interface{}, error) {
 	prepareContext, err := databaseTpl.prepareContext(ctx, sql)
 	defer func() {
 		if rec := recover(); rec != nil {
 			var err error
 			if as := errors.As(rec.(error), &err); as {
-				logger.ErrorWithErr(ctx, "execute has failed", errors.WithStack(err))
+				logger.ErrorWithErr(*ctx, "execute has failed", errors.WithStack(err))
 			}
 		}
 	}()
-	queryContext, err := prepareContext.QueryContext(ctx, opts...)
+	queryContext, err := prepareContext.QueryContext(*ctx, opts...)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -67,7 +68,7 @@ func (databaseTpl *DatabaseTpl) FindOne(ctx context.Context, sql string, renderR
 	return mysql.RenderResult(queryContext, renderResult), nil
 }
 
-func (databaseTpl *DatabaseTpl) Update(ctx context.Context, sql string, ops ...any) (int64, error) {
+func (databaseTpl *DatabaseTpl) Update(ctx *context.Context, sql string, ops ...any) (int64, error) {
 	prepareContext, err := databaseTpl.prepareContext(ctx, sql)
 	if err != nil {
 		return 0, errors.WithStack(err)
@@ -79,9 +80,9 @@ func (databaseTpl *DatabaseTpl) Update(ctx context.Context, sql string, ops ...a
 	return result.RowsAffected()
 }
 
-func (databaseTpl *DatabaseTpl) FindList(ctx context.Context, sql string, renderResult interface{}, opts ...any) ([]interface{}, error) {
+func (databaseTpl *DatabaseTpl) FindList(ctx *context.Context, sql string, renderResult interface{}, opts ...any) ([]interface{}, error) {
 	prepareContext, err := databaseTpl.prepareContext(ctx, sql)
-	queryContext, err := prepareContext.QueryContext(ctx, opts...)
+	queryContext, err := prepareContext.QueryContext(*ctx, opts...)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -94,20 +95,19 @@ func (databaseTpl *DatabaseTpl) FindList(ctx context.Context, sql string, render
 	return result, nil
 }
 
-func (databaseTpl *DatabaseTpl) WithTransaction(ctx context.Context, f func(tx Transaction) error) error {
+func (databaseTpl *DatabaseTpl) WithTransaction(ctx *context.Context, f func(ctx *context.Context) error) error {
 	tx, err := databaseTpl.Db.Begin()
-	value := context.WithValue(ctx, "tx", tx)
-	ctx = value
-	defer func(ctx context.Context, tx *sql.Tx) {
+	value := context.WithValue(*ctx, "tx", tx)
+	defer func(ctx *context.Context, tx *sql.Tx) {
 		err := tx.Rollback()
 		if err != nil {
-			logger.Error(ctx, "", errors.WithStack(err))
+			logger.Error(*ctx, "", errors.WithStack(err))
 		}
 	}(ctx, tx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	err = f(tx)
+	err = f(&value)
 	if err != nil {
 		return errors.WithStack(err)
 	}

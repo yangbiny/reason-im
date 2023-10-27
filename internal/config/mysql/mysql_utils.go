@@ -22,6 +22,7 @@ func Datasource() *sql.DB {
 	}
 	db.SetConnMaxIdleTime(10)
 	db.SetMaxOpenConns(100)
+	db.SetConnMaxIdleTime(time.Duration(time.Duration.Hours(1)))
 	return db
 }
 

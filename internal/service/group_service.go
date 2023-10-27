@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	apierror "github.com/yangbiny/reason-commons/err"
 	"reason-im/internal/repo"
@@ -19,49 +20,52 @@ type GroupService struct {
 	tpl            *mysql.DatabaseTpl
 }
 
-func NewGroupService(groupDao repo.GroupDao, tpl *mysql.DatabaseTpl) GroupService {
+func NewGroupService(
+	groupDao repo.GroupDao,
+	userDao repo.UserDao,
+	groupMemberDao repo.GroupMemberDao,
+	tpl *mysql.DatabaseTpl,
+) GroupService {
 	return GroupService{
-		groupDao: groupDao,
-		tpl:      tpl,
+		groupDao:       groupDao,
+		groupMemberDao: groupMemberDao,
+		userDao:        userDao,
+		tpl:            tpl,
 	}
 }
 
 func (service GroupService) NewGroup(ctx *gin.Context, cmd *CreateGroupCmd) (*vo.GroupVo, *apierror.ApiError) {
+	now := time.Now()
 	group := &Group{
 		Name:           cmd.Name,
 		Description:    "",
 		GroupType:      model.GroupType(cmd.Type),
 		GroupMemberCnt: 1,
+		GmtCreate:      now,
+		GmtUpdate:      now,
 	}
 	var newGroup *Group
 	var err error
-	err = service.tpl.WithTransaction(ctx, func(tx mysql.Transaction) error {
-		defer func() {
-			if err := recover(); err != nil {
-				_ = tx.Rollback()
-			}
-		}()
+	ctx2 := ctx.Request.Context()
+	err = service.tpl.WithTransaction(&ctx2, func(ctx *context.Context) error {
 		newGroup, err = service.groupDao.NewGroup(ctx, group)
 		if err != nil {
-			_ = tx.Rollback()
 			return err
 		}
-		info, err2 := service.userDao.GetUserInfo(cmd.UserId)
+		info, err2 := service.userDao.GetUserInfo(ctx, cmd.UserId)
 		if err2 != nil {
-			_ = tx.Rollback()
 			return err2
 		}
 		groupMember := &model.GroupMember{
 			GroupId:         newGroup.Id,
 			UserId:          cmd.UserId,
 			NickName:        info.Name,
-			GroupMemberRole: model.GROUP_MEMBER_ROLE_ADMIN,
-			GmtCreate:       time.Time{},
-			GmtUpdate:       time.Time{},
+			GroupMemberRole: model.GROUP_MEMBER_ROLE_OWNER,
+			GmtCreate:       now,
+			GmtUpdate:       now,
 		}
 		_, err = service.groupMemberDao.NewGroupMember(ctx, groupMember)
 		if err != nil {
-			_ = tx.Rollback()
 			return err
 		}
 		return nil

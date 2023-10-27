@@ -15,6 +15,8 @@ const (
 	GROUP_MEMBER_ROLE_NORMAL GroupMemberRole = iota
 	// GROUP_MEMBER_ROLE_ADMIN 2. 群组管理员
 	GROUP_MEMBER_ROLE_ADMIN
+	// GROUP_MEMBER_ROLE_OWNER 3. 群组所有者
+	GROUP_MEMBER_ROLE_OWNER
 )
 
 type Group struct {

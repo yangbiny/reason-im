@@ -54,7 +54,9 @@ var (
 func InitGroupService() service.GroupService {
 	databaseTpl := _wireDatabaseTplValue3
 	groupDao := repo.NewGroupDao(databaseTpl)
-	groupService := service.NewGroupService(groupDao)
+	userDao := repo.NewUserDao(databaseTpl)
+	groupMemberDao := repo.NewGroupMemberDao(databaseTpl)
+	groupService := service.NewGroupService(groupDao, userDao, groupMemberDao, databaseTpl)
 	return groupService
 }
 

@@ -21,11 +21,13 @@ func NewUserService(userDao repo.UserDao, fiendDao repo.FriendDao) UserService {
 }
 
 func (userService *UserService) NewUser(ctx *gin.Context, cmd *NewUserCmd) (*repo.User, *apierror.ApiError) {
+	ctx2 := ctx.Request.Context()
+
 	// 创建用户信息
 	user := repo.User{
 		Name: cmd.Name,
 	}
-	newUser, err := userService.UserDao.NewUser(&user)
+	newUser, err := userService.UserDao.NewUser(&ctx2, &user)
 	if err != nil {
 		return nil, apierror.WhenServiceError(err)
 	}
@@ -33,12 +35,14 @@ func (userService *UserService) NewUser(ctx *gin.Context, cmd *NewUserCmd) (*rep
 }
 
 func (userService *UserService) GetUserInfo(ctx *gin.Context, cmd *QueryUserCmd) (*vo.UserRelationVo, *apierror.ApiError) {
-	info, err := userService.UserDao.GetUserInfo(cmd.QueryUid)
+	ctx2 := ctx.Request.Context()
+
+	info, err := userService.UserDao.GetUserInfo(&ctx2, cmd.QueryUid)
 	if err != nil {
 		return nil, apierror.WhenServiceError(err)
 	}
 	id := info.Id
-	friendInfo, err := userService.UserFriendDao.QueryFriendInfo(cmd.UserId, id)
+	friendInfo, err := userService.UserFriendDao.QueryFriendInfo(&ctx2, cmd.UserId, id)
 	if err != nil {
 		return nil, apierror.WhenServiceError(err)
 	}
@@ -50,15 +54,17 @@ func (userService *UserService) GetUserInfo(ctx *gin.Context, cmd *QueryUserCmd)
 	}, nil
 }
 
-func (userService *UserService) Login(c *gin.Context, user *UserLoginCmd) (bool, *apierror.ApiError) {
-	queryUser, err := userService.UserDao.QueryUserByName(user.Name)
+func (userService *UserService) Login(ctx *gin.Context, user *UserLoginCmd) (bool, *apierror.ApiError) {
+	ctx2 := ctx.Request.Context()
+
+	queryUser, err := userService.UserDao.QueryUserByName(&ctx2, user.Name)
 	if err != nil {
 		return false, apierror.WhenServiceError(err)
 	}
 	if queryUser == nil {
 		return false, nil
 	}
-	err = web.GenerateJwtToken(c, queryUser.Name, queryUser.Id)
+	err = web.GenerateJwtToken(ctx, queryUser.Name, queryUser.Id)
 	if err != nil {
 		return false, apierror.WhenServiceError(err)
 	}
