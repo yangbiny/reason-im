@@ -97,18 +97,13 @@ func (databaseTpl *DatabaseTpl) FindList(ctx *context.Context, sql string, rende
 
 func (databaseTpl *DatabaseTpl) WithTransaction(ctx *context.Context, f func(ctx *context.Context) error) error {
 	tx, err := databaseTpl.Db.Begin()
-	value := context.WithValue(*ctx, "tx", tx)
-	defer func(ctx *context.Context, tx *sql.Tx) {
-		err := tx.Rollback()
-		if err != nil {
-			logger.Error(*ctx, "", errors.WithStack(err))
-		}
-	}(ctx, tx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	value := context.WithValue(*ctx, "tx", tx)
 	err = f(&value)
 	if err != nil {
+		_ = tx.Rollback()
 		return errors.WithStack(err)
 	}
 	err = tx.Commit()

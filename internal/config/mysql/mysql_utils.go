@@ -47,7 +47,6 @@ func RenderResult(rows *sql.Rows, resultType interface{}) interface{} {
 		panic("请传入结构体")
 	}
 	columns, _ := rows.Columns()
-	columnTypes, _ := rows.ColumnTypes()
 	columnsSize := len(columns)
 	columnValue := make([]interface{}, columnsSize)
 	valuePointers := make([]interface{}, columnsSize)
@@ -58,22 +57,21 @@ func RenderResult(rows *sql.Rows, resultType interface{}) interface{} {
 	if err != nil {
 		panic(err)
 	}
-	columnKeyIndexMap := make(map[string]int)
+	columnKeyIndexMap := make(map[string]interface{})
 	for i := range columns {
-		columnKeyIndexMap[columns[i]] = i
+		columnKeyIndexMap[columns[i]] = columnValue[i]
 	}
 	value := reflect.New(of).Elem()
 	for i := 0; i < of.NumField(); i++ {
 		field := of.Field(i)
 		columnName := field.Tag.Get("mysql")
-		index := columnKeyIndexMap[columnName]
-		columnValue := columnValue[index]
-		setValue(value.Field(i), columnValue, columnTypes[i])
+		columnValue := columnKeyIndexMap[columnName]
+		setValue(value.Field(i), columnValue)
 	}
 	return value.Interface()
 }
 
-func setValue(field reflect.Value, value interface{}, valueType *sql.ColumnType) {
+func setValue(field reflect.Value, value interface{}) {
 	t := field.Type()
 	kind := t.Kind()
 	switch kind {
