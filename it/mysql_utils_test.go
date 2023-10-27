@@ -27,7 +27,7 @@ func TestDatabaseTpl_FindOne(t *testing.T) {
 			return err
 		}
 
-		_, err = tpl.Insert(ctx, "insert into im_group_member (id, group_id, user_id, nick_name, group_member_role, create_time, update_time) values (1, 1, 1, 'test', 1, now(), now())")
+		_, err = tpl.Insert(ctx, "insert into im_group_member (group_id, user_id, nick_name, group_member_role, gmt_create, gmt_update) values ( 1, 1, 'test', 1, now(), now())")
 		if err != nil {
 			return err
 		}

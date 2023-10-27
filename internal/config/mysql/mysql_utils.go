@@ -41,10 +41,10 @@ func CloseMysqlConn(conn *sql.Conn, context context.Context) {
 	}
 }
 
-func RenderResult(rows *sql.Rows, resultType interface{}) interface{} {
+func RenderResult(rows *sql.Rows, resultType interface{}) (interface{}, error) {
 	of := reflect.TypeOf(resultType)
 	if of.Kind() != reflect.Struct {
-		panic("请传入结构体")
+		return nil, fmt.Errorf("resultType must be struct")
 	}
 	columns, _ := rows.Columns()
 	columnsSize := len(columns)
@@ -55,7 +55,7 @@ func RenderResult(rows *sql.Rows, resultType interface{}) interface{} {
 	}
 	err := rows.Scan(valuePointers...)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	columnKeyIndexMap := make(map[string]interface{})
 	for i := range columns {
@@ -68,7 +68,7 @@ func RenderResult(rows *sql.Rows, resultType interface{}) interface{} {
 		columnValue := columnKeyIndexMap[columnName]
 		setValue(value.Field(i), columnValue)
 	}
-	return value.Interface()
+	return value.Interface(), nil
 }
 
 func setValue(field reflect.Value, value interface{}) {

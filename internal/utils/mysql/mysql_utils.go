@@ -65,7 +65,7 @@ func (databaseTpl *DatabaseTpl) FindOne(ctx *context.Context, sql string, render
 	if !queryContext.Next() {
 		return nil, nil
 	}
-	return mysql.RenderResult(queryContext, renderResult), nil
+	return mysql.RenderResult(queryContext, renderResult)
 }
 
 func (databaseTpl *DatabaseTpl) Update(ctx *context.Context, sql string, ops ...any) (int64, error) {
@@ -89,7 +89,10 @@ func (databaseTpl *DatabaseTpl) FindList(ctx *context.Context, sql string, rende
 
 	var result = make([]interface{}, 0)
 	for queryContext.Next() {
-		i := mysql.RenderResult(queryContext, renderResult)
+		i, err := mysql.RenderResult(queryContext, renderResult)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 		result = append(result, i)
 	}
 	return result, nil
