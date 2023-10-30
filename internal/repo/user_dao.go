@@ -13,9 +13,9 @@ type User = model.Users
 var tableName = "im_user"
 
 type UserDao interface {
-	NewUser(ctx *context.Context, user *User) (*User, error)
-	GetUserInfo(ctx *context.Context, userId int64) (*User, error)
-	QueryUserByName(ctx *context.Context, name string) (*User, error)
+	NewUser(ctx context.Context, user *User) (*User, error)
+	GetUserInfo(ctx context.Context, userId int64) (*User, error)
+	QueryUserByName(ctx context.Context, name string) (*User, error)
 }
 
 type UserDaoImpl struct {
@@ -28,7 +28,7 @@ func NewUserDao(tpl *mysql2.DatabaseTpl) UserDao {
 	}
 }
 
-func (u UserDaoImpl) NewUser(ctx *context.Context, user *User) (*User, error) {
+func (u UserDaoImpl) NewUser(ctx context.Context, user *User) (*User, error) {
 	var sqlStr = fmt.Sprintf("insert into %s (name,gmt_create,gmt_update) values (?,?,?)", tableName)
 	date := time.Now().Local()
 	insert, err := u.DatabaseTpl.Insert(ctx, sqlStr, user.Name, date, date)
@@ -41,7 +41,7 @@ func (u UserDaoImpl) NewUser(ctx *context.Context, user *User) (*User, error) {
 	}, nil
 }
 
-func (u UserDaoImpl) GetUserInfo(ctx *context.Context, userId int64) (*User, error) {
+func (u UserDaoImpl) GetUserInfo(ctx context.Context, userId int64) (*User, error) {
 	sql := fmt.Sprintf("select * from %s where id = ?", tableName)
 	one, err := u.DatabaseTpl.FindOne(ctx, sql, User{}, userId)
 	if err != nil || one == nil {
@@ -51,7 +51,7 @@ func (u UserDaoImpl) GetUserInfo(ctx *context.Context, userId int64) (*User, err
 	return &user, nil
 }
 
-func (u UserDaoImpl) QueryUserByName(ctx *context.Context, name string) (*User, error) {
+func (u UserDaoImpl) QueryUserByName(ctx context.Context, name string) (*User, error) {
 	var sql = "select * from " + tableName + " where name = ?"
 	one, err := u.DatabaseTpl.FindOne(ctx, sql, User{}, name)
 	if err != nil || one == nil {

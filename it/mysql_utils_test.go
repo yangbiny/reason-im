@@ -4,6 +4,7 @@ import (
 	"context"
 	"reason-im/internal/config/mysql"
 	"reason-im/internal/repo"
+	"reason-im/internal/utils/logger"
 	mysql2 "reason-im/internal/utils/mysql"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestDatabaseTpl_FindOne(t *testing.T) {
 	tpl := mysql2.NewDatabaseTpl(datasource)
 
 	background := context.Background()
-	tpl.WithTransaction(&background, func(ctx *context.Context) error {
+	err := tpl.WithTransaction(background, func(ctx context.Context) error {
 		_, err := tpl.Insert(ctx, "insert into im_group ( name, description, group_type, group_member_cnt, gmt_create, gmt_update) values ('test', 'test',1, 1, now(), now())")
 		if err != nil {
 			println(err.Error())
@@ -34,4 +35,7 @@ func TestDatabaseTpl_FindOne(t *testing.T) {
 
 		return nil
 	})
+	if err != nil {
+		logger.ErrorWithErr(background, "execute has failed", err)
+	}
 }

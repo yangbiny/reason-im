@@ -42,14 +42,19 @@ func CloseMysqlConn(conn *sql.Conn, context context.Context) {
 }
 
 func RenderResult(rows *sql.Rows, resultType interface{}) (interface{}, error) {
+	defer func(rows *sql.Rows) {
+		_ = rows.Close()
+	}(rows)
 	of := reflect.TypeOf(resultType)
 	if of.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("resultType must be struct")
 	}
 	columns, _ := rows.Columns()
 	columnsSize := len(columns)
+
 	columnValue := make([]interface{}, columnsSize)
 	valuePointers := make([]interface{}, columnsSize)
+
 	for i := range valuePointers {
 		valuePointers[i] = &columnValue[i]
 	}
@@ -57,10 +62,12 @@ func RenderResult(rows *sql.Rows, resultType interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	columnKeyIndexMap := make(map[string]interface{})
 	for i := range columns {
 		columnKeyIndexMap[columns[i]] = columnValue[i]
 	}
+
 	value := reflect.New(of).Elem()
 	for i := 0; i < of.NumField(); i++ {
 		field := of.Field(i)

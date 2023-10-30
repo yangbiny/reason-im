@@ -18,12 +18,12 @@ type DeleteFriendCmd struct {
 }
 
 type FriendDao interface {
-	NewFriend(ctx *context.Context, friend *Friend) (*Friend, error)
-	UpdateFriend(ctx *context.Context, friend *Friend) (bool, error)
-	GetFriendInfo(ctx *context.Context, friendId int64) (*Friend, error)
-	DeleteFriend(ctx *context.Context, cmd DeleteFriendCmd) (bool, error)
-	QueryFriendList(ctx *context.Context, userId int64) ([]*Friend, error)
-	QueryFriendInfo(ctx *context.Context, userId int64, friendId int64) (*Friend, error)
+	NewFriend(ctx context.Context, friend *Friend) (*Friend, error)
+	UpdateFriend(ctx context.Context, friend *Friend) (bool, error)
+	GetFriendInfo(ctx context.Context, friendId int64) (*Friend, error)
+	DeleteFriend(ctx context.Context, cmd DeleteFriendCmd) (bool, error)
+	QueryFriendList(ctx context.Context, userId int64) ([]*Friend, error)
+	QueryFriendInfo(ctx context.Context, userId int64, friendId int64) (*Friend, error)
 }
 
 type FriendDaoImpl struct {
@@ -36,7 +36,7 @@ func NewFriendDao(tpl *mysql2.DatabaseTpl) FriendDao {
 	}
 }
 
-func (dao FriendDaoImpl) UpdateFriend(ctx *context.Context, friend *Friend) (bool, error) {
+func (dao FriendDaoImpl) UpdateFriend(ctx context.Context, friend *Friend) (bool, error) {
 	var sql = fmt.Sprintf("update %s set status = ?,remark = ?,gmt_update = ? where id = ?", friendTableName)
 	rows, err := dao.DatabaseTpl.Update(ctx, sql, friend.Status, friend.Remark, friend.GmtUpdate, friend.Id)
 	if err != nil {
@@ -48,7 +48,7 @@ func (dao FriendDaoImpl) UpdateFriend(ctx *context.Context, friend *Friend) (boo
 	return true, nil
 }
 
-func (dao FriendDaoImpl) NewFriend(ctx *context.Context, friend *Friend) (*Friend, error) {
+func (dao FriendDaoImpl) NewFriend(ctx context.Context, friend *Friend) (*Friend, error) {
 	var sql = fmt.Sprintf("insert into %s (user_id,friend_id,status,remark,gmt_create,gmt_update) values (?,?,?,?,?,?)", friendTableName)
 	insert, err := dao.DatabaseTpl.Insert(ctx, sql, friend.UserId, friend.FriendId, friend.Status, friend.Remark, friend.GmtCreate, friend.GmtUpdate)
 	if err != nil {
@@ -58,7 +58,7 @@ func (dao FriendDaoImpl) NewFriend(ctx *context.Context, friend *Friend) (*Frien
 	return friend, nil
 }
 
-func (dao FriendDaoImpl) GetFriendInfo(ctx *context.Context, friendId int64) (*Friend, error) {
+func (dao FriendDaoImpl) GetFriendInfo(ctx context.Context, friendId int64) (*Friend, error) {
 	var sql = fmt.Sprintf("select %s from %s where id = ?", friendColumns, friendTableName)
 	one, err := dao.DatabaseTpl.FindOne(ctx, sql, Friend{}, friendId)
 	if err != nil || one == nil {
@@ -68,7 +68,7 @@ func (dao FriendDaoImpl) GetFriendInfo(ctx *context.Context, friendId int64) (*F
 	return &friend, nil
 }
 
-func (dao FriendDaoImpl) DeleteFriend(ctx *context.Context, cmd DeleteFriendCmd) (bool, error) {
+func (dao FriendDaoImpl) DeleteFriend(ctx context.Context, cmd DeleteFriendCmd) (bool, error) {
 	var sql = fmt.Sprintf("update %s set status = ? where id = ?", friendTableName)
 	rows, err := dao.DatabaseTpl.Update(ctx, sql, cmd.Status, cmd.Id)
 	if err != nil {
@@ -77,7 +77,7 @@ func (dao FriendDaoImpl) DeleteFriend(ctx *context.Context, cmd DeleteFriendCmd)
 	return rows > 0, nil
 }
 
-func (dao FriendDaoImpl) QueryFriendList(ctx *context.Context, userId int64) ([]*Friend, error) {
+func (dao FriendDaoImpl) QueryFriendList(ctx context.Context, userId int64) ([]*Friend, error) {
 	var sql = fmt.Sprintf("select %s from %s where user_id = ?", friendColumns, friendTableName)
 	rows, err := dao.DatabaseTpl.FindList(ctx, sql, Friend{}, userId)
 	if err != nil {
@@ -91,7 +91,7 @@ func (dao FriendDaoImpl) QueryFriendList(ctx *context.Context, userId int64) ([]
 	return friends, nil
 }
 
-func (dao FriendDaoImpl) QueryFriendInfo(ctx *context.Context, userId int64, friendId int64) (*Friend, error) {
+func (dao FriendDaoImpl) QueryFriendInfo(ctx context.Context, userId int64, friendId int64) (*Friend, error) {
 	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = ?", friendColumns, friendTableName)
 	one, err := dao.DatabaseTpl.FindOne(ctx, sql, Friend{}, userId, friendId)
 	if err != nil || one == nil {

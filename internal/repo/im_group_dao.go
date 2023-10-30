@@ -17,13 +17,13 @@ var imGroupTableName = "im_group"
 var imGroupMemberTableName = "im_group_member"
 
 type GroupDao interface {
-	NewGroup(ctx *context.Context, group *Group) (*Group, error)
-	FindById(ctx *context.Context, id int64) (*Group, error)
+	NewGroup(ctx context.Context, group *Group) (*Group, error)
+	FindById(ctx context.Context, id int64) (*Group, error)
 }
 
 type GroupMemberDao interface {
-	NewGroupMember(ctx *context.Context, groupMember *GroupMember) (*GroupMember, error)
-	FindByGroupId(ctx *context.Context, groupId int64) ([]*GroupMember, error)
+	NewGroupMember(ctx context.Context, groupMember *GroupMember) (*GroupMember, error)
+	FindByGroupId(ctx context.Context, groupId int64) ([]*GroupMember, error)
 }
 
 type GroupDaoImpl struct {
@@ -46,7 +46,7 @@ func NewGroupDao(databases *mysql.DatabaseTpl) GroupDao {
 	}
 }
 
-func (g *GroupMemberDaoImpl) FindByGroupId(ctx *context.Context, groupId int64) ([]*GroupMember, error) {
+func (g *GroupMemberDaoImpl) FindByGroupId(ctx context.Context, groupId int64) ([]*GroupMember, error) {
 	sqlStr := fmt.Sprintf("select %s from %s where group_id = ?", groupMemberColumns, imGroupMemberTableName)
 	list, err := g.databasesTpl.FindList(ctx, sqlStr, GroupMemberDO{}, groupId)
 	if err != nil {
@@ -68,7 +68,7 @@ func (g *GroupMemberDaoImpl) FindByGroupId(ctx *context.Context, groupId int64) 
 	return groupMembers, nil
 }
 
-func (g *GroupMemberDaoImpl) NewGroupMember(ctx *context.Context, groupMember *GroupMember) (*GroupMember, error) {
+func (g *GroupMemberDaoImpl) NewGroupMember(ctx context.Context, groupMember *GroupMember) (*GroupMember, error) {
 	sqlStr := fmt.Sprintf("insert into %s (group_id,user_id,nick_name,group_member_role,gmt_create,gmt_update) values (?,?,?,?,?,?)", imGroupMemberTableName)
 	insert, err := g.databasesTpl.Insert(ctx, sqlStr, groupMember.GroupId, groupMember.UserId, groupMember.NickName, groupMember.GroupMemberRole, groupMember.GmtCreate, groupMember.GmtUpdate)
 	if err != nil {
@@ -78,7 +78,7 @@ func (g *GroupMemberDaoImpl) NewGroupMember(ctx *context.Context, groupMember *G
 	return groupMember, nil
 }
 
-func (g *GroupDaoImpl) NewGroup(ctx *context.Context, group *Group) (*Group, error) {
+func (g *GroupDaoImpl) NewGroup(ctx context.Context, group *Group) (*Group, error) {
 	sqlStr := fmt.Sprintf("insert into %s (name,description,group_type,group_member_cnt,gmt_create,gmt_update) values (?,?,?,?,?,?)", imGroupTableName)
 	insert, err := g.databasesTpl.Insert(ctx, sqlStr, group.Name, group.Description, group.GroupType, group.GroupMemberCnt, group.GmtCreate, group.GmtUpdate)
 	if err != nil {
@@ -88,7 +88,7 @@ func (g *GroupDaoImpl) NewGroup(ctx *context.Context, group *Group) (*Group, err
 	return group, nil
 }
 
-func (g *GroupDaoImpl) FindById(ctx *context.Context, id int64) (*Group, error) {
+func (g *GroupDaoImpl) FindById(ctx context.Context, id int64) (*Group, error) {
 	sqlStr := fmt.Sprintf("select %s from %s where id = ?", columns, imGroupTableName)
 	one, err := g.databasesTpl.FindOne(ctx, sqlStr, GroupDO{}, id)
 	if err != nil {
