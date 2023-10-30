@@ -24,6 +24,7 @@ type GroupDao interface {
 type GroupMemberDao interface {
 	NewGroupMember(ctx context.Context, groupMember *GroupMember) (*GroupMember, error)
 	FindByGroupId(ctx context.Context, groupId int64) ([]*GroupMember, error)
+	FindByGroupAndUserId(ctx context.Context, groupId, userId int64) (*GroupMember, error)
 }
 
 type GroupDaoImpl struct {
@@ -44,6 +45,24 @@ func NewGroupDao(databases *mysql.DatabaseTpl) GroupDao {
 	return &GroupDaoImpl{
 		databasesTpl: databases,
 	}
+}
+
+func (g *GroupMemberDaoImpl) FindByGroupAndUserId(ctx context.Context, groupId, userId int64) (*GroupMember, error) {
+	sqlStr := fmt.Sprintf("select %s from %s where group_id = ? and user_id = ?", groupMemberColumns, imGroupMemberTableName)
+	one, err := g.databasesTpl.FindOne(ctx, sqlStr, GroupMemberDO{}, groupId, userId)
+	if err != nil {
+		return nil, err
+	}
+	groupMemberDO := one.(*GroupMemberDO)
+	return &GroupMember{
+		Id:              groupMemberDO.Id,
+		GroupId:         groupMemberDO.GroupId,
+		UserId:          groupMemberDO.UserId,
+		NickName:        groupMemberDO.NickName,
+		GroupMemberRole: model.GroupMemberRole(groupMemberDO.GroupMemberRole),
+		GmtCreate:       groupMemberDO.GmtCreate,
+		GmtUpdate:       groupMemberDO.GmtUpdate,
+	}, nil
 }
 
 func (g *GroupMemberDaoImpl) FindByGroupId(ctx context.Context, groupId int64) ([]*GroupMember, error) {

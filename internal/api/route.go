@@ -48,6 +48,7 @@ func NewGinRouter() *gin.Engine {
 	imGroup := engine.Group("/group", web.Authorize())
 	{
 		imGroup.POST("/create/", onEvent(new(service2.CreateGroupCmd), groupService.NewGroup))
+		imGroup.POST("/invite/", onEvent(new(service2.InviteUserToGroupCmd), groupService.InviteToGroup))
 	}
 
 	ws := engine.Group("/ws/", web.Authorize())

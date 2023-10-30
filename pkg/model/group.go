@@ -51,3 +51,7 @@ type GroupMember struct {
 	// 群组成员更新时间
 	GmtUpdate time.Time
 }
+
+func (groupMember *GroupMember) CanInviteUser() bool {
+	return groupMember.GroupMemberRole == GROUP_MEMBER_ROLE_ADMIN || groupMember.GroupMemberRole == GROUP_MEMBER_ROLE_OWNER
+}

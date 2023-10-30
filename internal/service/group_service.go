@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	apierror "github.com/yangbiny/reason-commons/err"
 	"reason-im/internal/repo"
@@ -81,6 +82,21 @@ func (service GroupService) NewGroup(ctx *gin.Context, cmd *CreateGroupCmd) (*vo
 }
 
 func (service GroupService) InviteToGroup(ctx *gin.Context, cmd *InviteUserToGroupCmd) (*vo.InviteGroupVo, *apierror.ApiError) {
+	ctx2 := ctx.Request.Context()
+	id, err := service.groupDao.FindById(ctx2, cmd.GroupId)
+	if err != nil {
+		return nil, apierror.WhenServiceError(err)
+	}
+	if id == nil {
+		return nil, apierror.WhenParamError(fmt.Errorf("群组不存在"))
+	}
+	groupMember, err := service.groupMemberDao.FindByGroupAndUserId(ctx2, cmd.GroupId, cmd.UserId)
+	if err != nil {
+		return nil, apierror.WhenServiceError(err)
+	}
+	if !groupMember.CanInviteUser() {
+		return nil, apierror.WhenParamError(fmt.Errorf("你没有权限邀请用户"))
+	}
 	return nil, nil
 }
 
