@@ -47,7 +47,7 @@ func (service GroupService) NewGroup(ctx *gin.Context, cmd *CreateGroupCmd) (*vo
 	var newGroup *Group
 	var err error
 	ctx2 := ctx.Request.Context()
-	err = service.tpl.WithTransaction(&ctx2, func(ctx *context.Context) error {
+	err = service.tpl.WithTransaction(ctx2, func(ctx context.Context) error {
 		newGroup, err = service.groupDao.NewGroup(ctx, group)
 		if err != nil {
 			return err
