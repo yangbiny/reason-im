@@ -10,11 +10,15 @@ import (
 
 type Group = model.Group
 type GroupMember = model.GroupMember
+type GroupMemberInvite = model.GroupMemberInvite
 
 var columns = "id,name,description,group_type,group_member_cnt,gmt_create,gmt_update"
 var groupMemberColumns = "id,group_id,user_id,nick_name,group_member_role,gmt_create,gmt_update"
+var groupMemberInviteColumns = "id,user_id,invite_user_id,group_id,invite_status,gmt_create,gmt_update"
+
 var imGroupTableName = "im_group"
 var imGroupMemberTableName = "im_group_member"
+var imGroupMemberInviteTableName = "im_group_member_invite"
 
 type GroupDao interface {
 	NewGroup(ctx context.Context, group *Group) (*Group, error)
@@ -27,11 +31,20 @@ type GroupMemberDao interface {
 	FindByGroupAndUserId(ctx context.Context, groupId, userId int64) (*GroupMember, error)
 }
 
+type GroupMemberInviteDao interface {
+	NewGroupMemberInvite(ctx context.Context, groupMemberInvite *GroupMemberInvite) (*GroupMemberInvite, error)
+	FindInviteById(ctx context.Context, id int64) (*GroupMemberInvite, error)
+}
+
 type GroupDaoImpl struct {
 	databasesTpl *mysql.DatabaseTpl
 }
 
 type GroupMemberDaoImpl struct {
+	databasesTpl *mysql.DatabaseTpl
+}
+
+type GroupMemberInviteDaoImpl struct {
 	databasesTpl *mysql.DatabaseTpl
 }
 
@@ -43,6 +56,12 @@ func NewGroupMemberDao(databases *mysql.DatabaseTpl) GroupMemberDao {
 
 func NewGroupDao(databases *mysql.DatabaseTpl) GroupDao {
 	return &GroupDaoImpl{
+		databasesTpl: databases,
+	}
+}
+
+func NewGroupMemberInviteDao(databases *mysql.DatabaseTpl) GroupMemberInviteDao {
+	return &GroupMemberInviteDaoImpl{
 		databasesTpl: databases,
 	}
 }
@@ -125,6 +144,34 @@ func (g *GroupDaoImpl) FindById(ctx context.Context, id int64) (*Group, error) {
 	}, nil
 }
 
+func (g GroupMemberInviteDaoImpl) NewGroupMemberInvite(ctx context.Context, groupMemberInvite *GroupMemberInvite) (*GroupMemberInvite, error) {
+	sqlStr := fmt.Sprintf("insert into %s (user_id,invite_user_id,group_id,invite_status,gmt_create,gmt_update) values (?,?,?,?,?,?)", imGroupMemberInviteTableName)
+	insert, err := g.databasesTpl.Insert(ctx, sqlStr, groupMemberInvite.UserId, groupMemberInvite.InviteUserId, groupMemberInvite.GroupId, groupMemberInvite.InviteStatus, groupMemberInvite.GmtCreate, groupMemberInvite.GmtUpdate)
+	if err != nil {
+		return nil, err
+	}
+	groupMemberInvite.Id = insert
+	return groupMemberInvite, nil
+}
+
+func (g GroupMemberInviteDaoImpl) FindInviteById(ctx context.Context, id int64) (*GroupMemberInvite, error) {
+	sqlStr := fmt.Sprintf("select %s from %s where id = ?", groupMemberInviteColumns, imGroupMemberInviteTableName)
+	one, err := g.databasesTpl.FindOne(ctx, sqlStr, GroupMemberInviteDO{}, id)
+	if err != nil {
+		return nil, err
+	}
+	groupMemberInviteDO := one.(GroupMemberInviteDO)
+	return &GroupMemberInvite{
+		Id:           groupMemberInviteDO.Id,
+		UserId:       groupMemberInviteDO.UserId,
+		InviteUserId: groupMemberInviteDO.InviteUserId,
+		GroupId:      groupMemberInviteDO.GroupId,
+		InviteStatus: groupMemberInviteDO.InviteStatus,
+		GmtCreate:    groupMemberInviteDO.GmtCreate,
+		GmtUpdate:    groupMemberInviteDO.GmtUpdate,
+	}, nil
+}
+
 type GroupDO struct {
 	Id             int64     `mysql:"id"`
 	Name           string    `mysql:"name"`
@@ -143,4 +190,14 @@ type GroupMemberDO struct {
 	GroupMemberRole int       `mysql:"group_member_role"`
 	GmtCreate       time.Time `mysql:"gmt_create"`
 	GmtUpdate       time.Time `mysql:"gmt_update"`
+}
+
+type GroupMemberInviteDO struct {
+	Id           int64     `mysql:"id"`
+	UserId       int64     `mysql:"user_id"`
+	InviteUserId int64     `mysql:"invite_user_id"`
+	GroupId      int64     `mysql:"group_id"`
+	InviteStatus int       `mysql:"invite_status"`
+	GmtCreate    time.Time `mysql:"gmt_create"`
+	GmtUpdate    time.Time `mysql:"gmt_update"`
 }

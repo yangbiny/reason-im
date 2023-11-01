@@ -15,23 +15,26 @@ import (
 type Group = model.Group
 
 type GroupService struct {
-	groupDao       repo.GroupDao
-	groupMemberDao repo.GroupMemberDao
-	userDao        repo.UserDao
-	tpl            *mysql.DatabaseTpl
+	groupDao             repo.GroupDao
+	groupMemberDao       repo.GroupMemberDao
+	groupMemberInviteDao repo.GroupMemberInviteDao
+	userDao              repo.UserDao
+	tpl                  *mysql.DatabaseTpl
 }
 
 func NewGroupService(
 	groupDao repo.GroupDao,
 	userDao repo.UserDao,
 	groupMemberDao repo.GroupMemberDao,
+	dao repo.GroupMemberInviteDao,
 	tpl *mysql.DatabaseTpl,
 ) GroupService {
 	return GroupService{
-		groupDao:       groupDao,
-		groupMemberDao: groupMemberDao,
-		userDao:        userDao,
-		tpl:            tpl,
+		groupDao:             groupDao,
+		groupMemberDao:       groupMemberDao,
+		groupMemberInviteDao: dao,
+		userDao:              userDao,
+		tpl:                  tpl,
 	}
 }
 
@@ -97,7 +100,20 @@ func (service GroupService) InviteToGroup(ctx *gin.Context, cmd *InviteUserToGro
 	if !groupMember.CanInviteUser() {
 		return nil, apierror.WhenParamError(fmt.Errorf("你没有权限邀请用户"))
 	}
-	return nil, nil
+	inviteUser, _ := service.userDao.GetUserInfo(ctx2, cmd.InviteUserId)
+	if inviteUser == nil {
+		return nil, apierror.WhenParamError(fmt.Errorf("邀请用户不存在"))
+	}
+	member, _ := service.groupMemberDao.FindByGroupAndUserId(ctx, cmd.GroupId, cmd.InviteUserId)
+	if member != nil {
+		return nil, apierror.WhenParamError(fmt.Errorf("该用户已经在该群组中"))
+	}
+	invite, _ := service.groupMemberInviteDao.NewGroupMemberInvite(ctx, &model.GroupMemberInvite{})
+	return &vo.InviteGroupVo{
+		Id:           invite.Id,
+		GroupId:      invite.GroupId,
+		InviteUserId: invite.InviteUserId,
+	}, nil
 }
 
 type CreateGroupCmd struct {

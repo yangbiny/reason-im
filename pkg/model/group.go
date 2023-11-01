@@ -55,3 +55,16 @@ type GroupMember struct {
 func (groupMember *GroupMember) CanInviteUser() bool {
 	return groupMember.GroupMemberRole == GROUP_MEMBER_ROLE_ADMIN || groupMember.GroupMemberRole == GROUP_MEMBER_ROLE_OWNER
 }
+
+type GroupMemberInvite struct {
+	Id           int64
+	UserId       int64
+	InviteUserId int64
+	GroupId      int64
+	// 邀请状态
+	InviteStatus int
+	// 邀请附加信息
+	Extra     string
+	GmtCreate time.Time
+	GmtUpdate time.Time
+}
