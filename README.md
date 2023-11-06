@@ -19,4 +19,13 @@
 
 ## support
 
-会有一些 基础包的提供，在 [Githun](https://github.com/yangbiny/reason-commons)
+会有一些 基础包的提供，在 [Github](https://github.com/yangbiny/reason-commons)
+
+## Feature
+
+- 群发 功能，可以通过 群发的方式 发送 数据，实现类型 微信的 群聊
+- 发布订阅 功能，可以通过 发布订阅的方式 发送 数据，实现 类似于 微信的 公众号
+- 朋友圈
+    - 朋友圈发布
+    - 朋友圈发布通知
+- 远程文件上传
