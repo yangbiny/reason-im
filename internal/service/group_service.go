@@ -116,6 +116,33 @@ func (service GroupService) InviteToGroup(ctx *gin.Context, cmd *InviteUserToGro
 	}, nil
 }
 
+func (service GroupService) SendMsgToGroup(ctx *gin.Context, cmd *GroupMemberSendMsgCmd) (bool, *apierror.ApiError) {
+	ctx2 := ctx.Request.Context()
+	group, err := service.groupDao.FindById(ctx2, cmd.GroupId)
+	if err != nil {
+		return false, apierror.WhenServiceError(err)
+	}
+	if group == nil {
+		return false, apierror.WhenParamError(fmt.Errorf("群组不存在"))
+	}
+	id, err := service.groupMemberDao.FindByGroupAndUserId(ctx2, cmd.GroupId, cmd.UserId)
+	if err != nil {
+		return false, apierror.WhenServiceError(err)
+	}
+	if id == nil {
+		return false, apierror.WhenParamError(fmt.Errorf("你不在该群组中"))
+	}
+
+	// TODO: send msg to group
+	return false, nil
+}
+
+type GroupMemberSendMsgCmd struct {
+	UserId  int64  `login_user_id:"user_id"`
+	GroupId int64  `json:"group_id"`
+	Msg     string `json:"msg"`
+}
+
 type CreateGroupCmd struct {
 	UserId int64  `login_user_id:"user_id"`
 	Name   string `json:"name"`
