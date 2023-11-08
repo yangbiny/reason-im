@@ -13,9 +13,9 @@ import (
 
 func NewGinRouter() *gin.Engine {
 	engine := gin.New()
-	err := engine.SetTrustedProxies([]string{"127.0.0.1"})
-	if err != nil {
-		logger.ErrorWithErr(nil, "set trusted proxies has failed", errors.WithStack(err))
+	err2 := engine.SetTrustedProxies([]string{"127.0.0.1"})
+	if err2 != nil {
+		logger.ErrorWithErr(nil, "set trusted proxies has failed", errors.WithStack(err2))
 		return nil
 	}
 	// user
