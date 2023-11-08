@@ -13,7 +13,7 @@ func NewMsgService() *MsgService {
 }
 
 func (msg *MsgService) SendMsg(c *gin.Context, cmd *MsgCmd) (bool, *apierror.ApiError) {
-	SendMsg(cmd.ObjectId, cmd.Msg)
+	SendMsg(cmd.UserId, cmd.ObjectId, cmd.Msg)
 	return true, nil
 }
 

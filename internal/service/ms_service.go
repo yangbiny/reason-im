@@ -117,35 +117,19 @@ func ServeWs(c *gin.Context, cmd *MessageCmd) (bool, *apierror.ApiError) {
 
 	client.hub.register <- client
 
-	go client.read()
 	return true, nil
 }
 
-func SendMsg(receiverId int64, msg string) {
+func SendMsg(fromUserId, receiverId int64, msg string) {
 	hub := UserHubs[receiverId]
 	if hub == nil {
 		return
 	}
-	hub.write <- []byte(msg)
-}
-
-func (c *Client) read() {
-	for {
-		_, message, err := c.conn.ReadMessage()
-		if err != nil {
-			break
-		}
-		var msg Msg
-		err = json.Unmarshal(message, &msg)
-		if err != nil {
-			logger.Error(nil, "unmarshal has failed", "err", err)
-			continue
-		}
-		toUserId := msg.ToUserId
-		hub, exist := UserHubs[toUserId]
-		if exist {
-			hub.receive <- message
-		}
+	msgStruct := Msg{
+		ToUserId:   receiverId,
+		FromUserId: fromUserId,
+		Msg:        msg,
 	}
-	c.hub.unregister <- c
+	marshal, _ := json.Marshal(msgStruct)
+	hub.write <- marshal
 }
