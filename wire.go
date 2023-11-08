@@ -49,6 +49,7 @@ func InitGroupService() service2.GroupService {
 		repo.NewGroupDao,
 		repo.NewUserDao,
 		repo.NewGroupMemberDao,
+		repo.NewGroupMemberInviteDao,
 		wire.Value(tpl),
 	)
 	return service2.GroupService{}

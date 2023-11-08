@@ -7,8 +7,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	apierror "github.com/yangbiny/reason-commons/err"
 	"reason-im/internal/utils/logger"
 )
+
+var magicGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 var UserHubs = make(map[int64]*Hub)
 
@@ -24,8 +27,7 @@ type Client struct {
 }
 
 type Hub struct {
-	FromUserId int64
-	ToUserId   int64
+	UserId     int64
 	client     *Client
 	register   chan *Client
 	unregister chan *Client
@@ -33,10 +35,9 @@ type Hub struct {
 	write      chan []byte
 }
 
-func NewHub(toUserId, fromUserId int64) *Hub {
+func NewHub(userId int64) *Hub {
 	return &Hub{
-		ToUserId:   toUserId,
-		FromUserId: fromUserId,
+		UserId:     userId,
 		receive:    make(chan []byte),
 		write:      make(chan []byte),
 		register:   make(chan *Client),
@@ -45,12 +46,12 @@ func NewHub(toUserId, fromUserId int64) *Hub {
 }
 
 func (h *Hub) onConnect(client *Client) {
-	UserHubs[h.FromUserId] = h
+	UserHubs[h.UserId] = h
 	h.client = client
 }
 
 func (h *Hub) onDisconnect(c *Client) {
-	delete(UserHubs, h.FromUserId)
+	delete(UserHubs, h.UserId)
 	close(c.hub.write)
 }
 
@@ -78,37 +79,38 @@ func (h *Hub) run() {
 			h.onDisconnect(client)
 		case message := <-h.receive:
 			h.onReceive(message)
+		case message := <-h.write:
+			h.onWriteMsg(message)
 		}
 	}
 }
 
-type MessageCmd struct {
-	UserId   int64 `login_user_id:"user_id"`
-	FriendId int64 `form:"friend_id"`
-}
-
-func ServeWs(cmd *MessageCmd, c *gin.Context) {
-	if cmd.UserId == cmd.FriendId {
-		c.AbortWithStatus(500)
+func (h *Hub) onWriteMsg(message []byte) {
+	err := h.client.conn.WriteMessage(websocket.TextMessage, message)
+	if err != nil {
 		return
 	}
+}
+
+type MessageCmd struct {
+	UserId int64 `login_user_id:"user_id"`
+}
+
+func ServeWs(c *gin.Context, cmd *MessageCmd) (bool, *apierror.ApiError) {
 	w := c.Writer
 	r := c.Request
 	key := r.Header.Get("Sec-WebSocket-Key")
-	guid := "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-
-	fullString := fmt.Sprintf("%s%s", key, guid)
+	fullString := fmt.Sprintf("%s%s", key, magicGUID)
 	hash := sha1.Sum([]byte(fullString))
 	encoded := base64.StdEncoding.EncodeToString(hash[:])
 	w.Header().Set("Sec-WebSocket-Accept", encoded)
 
 	conn, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return false, apierror.WhenServiceError(err)
 	}
 
-	hub := NewHub(cmd.FriendId, cmd.UserId)
+	hub := NewHub(cmd.UserId)
 	go hub.run()
 
 	client := &Client{hub: hub, conn: conn}
@@ -116,7 +118,15 @@ func ServeWs(cmd *MessageCmd, c *gin.Context) {
 	client.hub.register <- client
 
 	go client.read()
-	go client.write()
+	return true, nil
+}
+
+func SendMsg(receiverId int64, msg string) {
+	hub := UserHubs[receiverId]
+	if hub == nil {
+		return
+	}
+	hub.write <- []byte(msg)
 }
 
 func (c *Client) read() {
@@ -138,23 +148,4 @@ func (c *Client) read() {
 		}
 	}
 	c.hub.unregister <- c
-}
-
-func (c *Client) write() {
-	for {
-		select {
-		case message, ok := <-c.hub.write:
-			if !ok {
-				err := c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				if err != nil {
-					return
-				}
-				return
-			}
-			err := c.conn.WriteMessage(websocket.TextMessage, message)
-			if err != nil {
-				return
-			}
-		}
-	}
 }

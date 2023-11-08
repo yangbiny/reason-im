@@ -52,14 +52,15 @@ func NewGinRouter() *gin.Engine {
 		imGroup.POST("/msg/send/", onEvent(new(service2.GroupMemberSendMsgCmd), groupService.SendMsgToGroup))
 	}
 
+	service := service2.NewMsgService()
+	imMsgGroup := engine.Group("/im/msg/", web.Authorize())
+	{
+		imMsgGroup.POST("/send/", onEvent(new(service2.MsgCmd), service.SendMsg))
+	}
+
 	ws := engine.Group("/ws/", web.Authorize())
 	{
-		ws.GET("msg/", func(c *gin.Context) {
-			cmd := new(service2.MessageCmd)
-			_ = c.BindQuery(cmd)
-			cmd.UserId = c.GetInt64("login_user_id")
-			service2.ServeWs(cmd, c)
-		})
+		ws.GET("connect/", onEvent(new(service2.MessageCmd), service2.ServeWs))
 	}
 	return engine
 }

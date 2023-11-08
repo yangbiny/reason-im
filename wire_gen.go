@@ -56,7 +56,8 @@ func InitGroupService() service.GroupService {
 	groupDao := repo.NewGroupDao(databaseTpl)
 	userDao := repo.NewUserDao(databaseTpl)
 	groupMemberDao := repo.NewGroupMemberDao(databaseTpl)
-	groupService := service.NewGroupService(groupDao, userDao, groupMemberDao, databaseTpl)
+	groupMemberInviteDao := repo.NewGroupMemberInviteDao(databaseTpl)
+	groupService := service.NewGroupService(groupDao, userDao, groupMemberDao, groupMemberInviteDao, databaseTpl)
 	return groupService
 }
 
