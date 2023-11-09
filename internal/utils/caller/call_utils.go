@@ -2,10 +2,13 @@ package caller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	apierror "github.com/yangbiny/reason-commons/err"
 	"reason-im/internal/utils/logger"
 	"reflect"
 )
+
+var validObj = validator.New()
 
 type ApiRespCode int
 
@@ -43,6 +46,14 @@ func Call[A, B any](
 	}
 
 	renderLoginUserId(c, req)
+
+	err2 = validateReq(req)
+	if err2 != nil {
+		logger.Error(c, "缺少必要参数", "req", req, "error", err2.Error())
+		ResponseWithParamInvalid(c, err2.Error())
+		return
+	}
+
 	data, err := function(c, req)
 	if err != nil {
 		if err.ApiStatus == apierror.Fail {
@@ -87,8 +98,25 @@ func renderLoginUserId[A any](c *gin.Context, req A) {
 			tag := field.Tag.Get("login_user_id")
 			if len(tag) > 0 {
 				v := reflect.ValueOf(req)
-				v.Elem().Field(i).SetInt(reflect.ValueOf(value).Int())
+				v2 := v.Elem().Field(i)
+				if v2.Kind() == reflect.Ptr {
+					ptr := reflect.New(v2.Type().Elem())
+					ptr.Elem().SetInt(value.(int64))
+					v2.Set(ptr)
+				} else {
+					v2.SetInt(reflect.ValueOf(value).Int())
+				}
+
+				break
 			}
 		}
 	}
+}
+
+func validateReq[A any](req A) error {
+	err := validObj.Struct(req)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -258,11 +258,11 @@ type RejectInviteCmd struct {
 }
 
 type QueryInviteCmd struct {
-	UserId int64 `login_user_id:"user_id" required:"true"`
+	UserId int64 `login_user_id:"user_id" validate:"required"`
 }
 
 type QueryFriendCmd struct {
-	UserId int64 `login_user_id:"user_id" required:"true"`
+	UserId int64 `login_user_id:"user_id" validate:"required"`
 }
 
 type DeleteFriendCmd struct {

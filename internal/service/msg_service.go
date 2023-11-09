@@ -18,7 +18,8 @@ func (msg *MsgService) SendMsg(c *gin.Context, cmd *MsgCmd) (bool, *apierror.Api
 }
 
 type MsgCmd struct {
-	UserId   int64  `login_user_id:"user_id" required:"true"`
-	ObjectId int64  `json:"object_id" required:"true"`
-	Msg      string `json:"msg" required:"true"`
+	UserId     *int64  `login_user_id:"user_id" validate:"required"`
+	ObjectId   *int64  `json:"object_id" validate:"required"`
+	ObjectType *int64  `json:"object_type" validate:"required"`
+	Msg        *string `json:"msg" validate:"required"`
 }

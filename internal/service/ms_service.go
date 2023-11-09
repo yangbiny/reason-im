@@ -16,9 +16,9 @@ var magicGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 var UserHubs = make(map[int64]*Hub)
 
 type Msg struct {
-	ToUserId   int64  `json:"to_user_id" required:"true"`
-	FromUserId int64  `json:"from_user_id" required:"true"`
-	Msg        string `json:"msg" required:"true"`
+	ToUserId   int64  `json:"to_user_id" validate:"required"`
+	FromUserId int64  `json:"from_user_id" validate:"required"`
+	Msg        string `json:"msg" validate:"required"`
 }
 
 type Client struct {
@@ -35,7 +35,7 @@ type Hub struct {
 	write      chan []byte
 }
 
-func NewHub(userId int64) *Hub {
+func newHub(userId int64) *Hub {
 	return &Hub{
 		UserId:     userId,
 		receive:    make(chan []byte),
@@ -110,7 +110,7 @@ func ServeWs(c *gin.Context, cmd *MessageCmd) (bool, *apierror.ApiError) {
 		return false, apierror.WhenServiceError(err)
 	}
 
-	hub := NewHub(cmd.UserId)
+	hub := newHub(cmd.UserId)
 	go hub.run()
 
 	client := &Client{hub: hub, conn: conn}
@@ -120,15 +120,15 @@ func ServeWs(c *gin.Context, cmd *MessageCmd) (bool, *apierror.ApiError) {
 	return true, nil
 }
 
-func SendMsg(fromUserId, receiverId int64, msg string) {
-	hub := UserHubs[receiverId]
+func SendMsg(fromUserId, receiverId *int64, msg *string) {
+	hub := UserHubs[*receiverId]
 	if hub == nil {
 		return
 	}
 	msgStruct := Msg{
-		ToUserId:   receiverId,
-		FromUserId: fromUserId,
-		Msg:        msg,
+		ToUserId:   *receiverId,
+		FromUserId: *fromUserId,
+		Msg:        *msg,
 	}
 	marshal, _ := json.Marshal(msgStruct)
 	hub.write <- marshal
