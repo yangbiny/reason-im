@@ -39,9 +39,10 @@ func NewGinRouter() *gin.Engine {
 		friendGroup.POST("/invite/", onEvent(new(service2.InviteFriendCmd), inviteFriendService.InviteFriend))
 		friendGroup.POST("/invite/receive/", onEvent(new(service2.ReceiveInviteCmd), inviteFriendService.ReceiveInvite))
 		friendGroup.POST("/invite/reject/", onEvent(new(service2.RejectInviteCmd), inviteFriendService.RejectInvite))
-		friendGroup.GET("/invite/list/", onEvent(new(service2.QueryInviteCmd), inviteFriendService.QueryInviteList))
 		friendGroup.POST("/delete/", onEvent(new(service2.DeleteFriendCmd), friendService.DeleteFriend))
 		friendGroup.POST("/query/list/", onEvent(new(service2.QueryFriendCmd), friendService.QueryFriends))
+
+		friendGroup.GET("/invite/list/", onEvent(new(service2.QueryInviteCmd), inviteFriendService.QueryInviteList))
 	}
 
 	groupService := reasonim.InitGroupService()

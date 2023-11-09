@@ -10,12 +10,16 @@ import (
 )
 
 type MsgService struct {
-	friendDao repo.FriendDao
+	friendDao      repo.FriendDao
+	groupDao       repo.GroupDao
+	groupMemberDao repo.GroupMemberDao
 }
 
-func NewMsgService(friendDao repo.FriendDao) MsgService {
+func NewMsgService(friendDao repo.FriendDao, groupDao repo.GroupDao, groupMemberDao repo.GroupMemberDao) MsgService {
 	return MsgService{
-		friendDao: friendDao,
+		friendDao:      friendDao,
+		groupDao:       groupDao,
+		groupMemberDao: groupMemberDao,
 	}
 }
 
@@ -39,7 +43,30 @@ func (msgService *MsgService) SendMsg(c *gin.Context, cmd *MsgCmd) (bool, *apier
 }
 
 func (msgService *MsgService) sendMsgToGroup(c *gin.Context, cmd *MsgCmd) (bool, *apierror.ApiError) {
-	panic("implement me")
+	group, err := msgService.groupDao.FindById(c, *cmd.ObjectId)
+	if err != nil {
+		return false, apierror.WhenServiceError(err)
+	}
+	if group == nil {
+		return false, apierror.WhenParamError(fmt.Errorf("群组不存在"))
+	}
+	groupMember, err := msgService.groupMemberDao.FindByGroupAndUserId(c, *cmd.ObjectId, *cmd.UserId)
+	if err != nil {
+		return false, apierror.WhenServiceError(err)
+	}
+	if groupMember == nil {
+		return false, apierror.WhenParamError(fmt.Errorf("你不是群成员"))
+	}
+	allGroupMembers, err := msgService.groupMemberDao.FindByGroupId(c, *cmd.ObjectId)
+	if err != nil {
+		return false, apierror.WhenServiceError(err)
+	}
+	go func() {
+		for _, member := range allGroupMembers {
+			SendMsg(cmd.UserId, &member.UserId, cmd.Msg)
+		}
+	}()
+	return true, nil
 }
 
 func (msgService *MsgService) sendMsgToFriend(c *gin.Context, cmd *MsgCmd) (bool, *apierror.ApiError) {
