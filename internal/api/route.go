@@ -52,7 +52,7 @@ func NewGinRouter() *gin.Engine {
 		imGroup.POST("/msg/send/", onEvent(new(service2.GroupMemberSendMsgCmd), groupService.SendMsgToGroup))
 	}
 
-	service := service2.NewMsgService()
+	service := reasonim.InitMsgService()
 	imMsgGroup := engine.Group("/im/msg/", web.Authorize())
 	{
 		imMsgGroup.POST("/send/", onEvent(new(service2.MsgCmd), service.SendMsg))

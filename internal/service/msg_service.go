@@ -13,8 +13,10 @@ type MsgService struct {
 	friendDao repo.FriendDao
 }
 
-func NewMsgService() *MsgService {
-	return &MsgService{}
+func NewMsgService(friendDao repo.FriendDao) MsgService {
+	return MsgService{
+		friendDao: friendDao,
+	}
 }
 
 func (msgService *MsgService) SendMsg(c *gin.Context, cmd *MsgCmd) (bool, *apierror.ApiError) {

@@ -65,6 +65,17 @@ var (
 	_wireDatabaseTplValue3 = tpl
 )
 
+func InitMsgService() service.MsgService {
+	databaseTpl := _wireDatabaseTplValue4
+	friendDao := repo.NewFriendDao(databaseTpl)
+	msgService := service.NewMsgService(friendDao)
+	return msgService
+}
+
+var (
+	_wireDatabaseTplValue4 = tpl
+)
+
 // wire.go:
 
 var datasource = mysql.Datasource()

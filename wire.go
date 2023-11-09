@@ -54,3 +54,12 @@ func InitGroupService() service2.GroupService {
 	)
 	return service2.GroupService{}
 }
+
+func InitMsgService() service2.MsgService {
+	wire.Build(
+		service2.NewMsgService,
+		repo.NewFriendDao,
+		wire.Value(tpl),
+	)
+	return service2.MsgService{}
+}
