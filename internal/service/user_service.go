@@ -41,7 +41,7 @@ func (userService *UserService) GetUserInfo(ctx *gin.Context, cmd *QueryUserCmd)
 		return nil, apierror.WhenServiceError(err)
 	}
 	id := info.Id
-	friendInfo, err := userService.UserFriendDao.QueryFriendInfo(ctx2, cmd.UserId, id)
+	friendInfo, err := userService.UserFriendDao.QueryFriendInfo(ctx2, &cmd.UserId, &id)
 	if err != nil {
 		return nil, apierror.WhenServiceError(err)
 	}

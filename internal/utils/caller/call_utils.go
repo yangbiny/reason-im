@@ -36,12 +36,12 @@ func Call[A, B any](
 	err2 := c.ShouldBindUri(req)
 	if err2 != nil {
 		logger.Error(c, "bind uri has failed", "req", req)
-		ResponseWithParamInvalid(c, err2.Error())
+		c.JSON(wrapWithParamError(err2))
 		return
 	}
 	if err := c.Bind(req); err != nil {
 		logger.Error(c, "bind req has failed", "req", req)
-		ResponseWithParamInvalid(c, err.Error())
+		c.JSON(wrapWithParamError(err))
 		return
 	}
 
@@ -50,15 +50,17 @@ func Call[A, B any](
 	err2 = validateReq(req)
 	if err2 != nil {
 		logger.Error(c, "缺少必要参数", "req", req, "error", err2.Error())
-		ResponseWithParamInvalid(c, err2.Error())
+		c.JSON(wrapWithParamError(err2))
 		return
 	}
 
 	data, err := function(c, req)
 	if err != nil {
-		if err.ApiStatus == apierror.Fail {
-			logger.ErrorWithErr(c, "execute has failed : ", err.Err)
+		if err.ApiStatus == apierror.RequestParamError {
+			c.JSON(wrapWithParamError(err.Err))
+			return
 		}
+		logger.ErrorWithErr(c, "execute has failed : ", err.Err)
 		c.JSON(wrapWithServiceError(err.Err))
 		return
 	}
@@ -81,8 +83,12 @@ func wrapWithServiceError(err error) (int, any) {
 	}
 }
 
-func ResponseWithParamInvalid(c *gin.Context, msg string) {
-	c.JSON(400, msg)
+func wrapWithParamError(err error) (int, any) {
+	return 200, ApiResp{
+		Code: ParamInvalid,
+		Msg:  err.Error(),
+		Data: nil,
+	}
 }
 
 func renderLoginUserId[A any](c *gin.Context, req A) {

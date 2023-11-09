@@ -23,7 +23,7 @@ type FriendDao interface {
 	GetFriendInfo(ctx context.Context, friendId int64) (*Friend, error)
 	DeleteFriend(ctx context.Context, cmd DeleteFriendCmd) (bool, error)
 	QueryFriendList(ctx context.Context, userId int64) ([]*Friend, error)
-	QueryFriendInfo(ctx context.Context, userId int64, friendId int64) (*Friend, error)
+	QueryFriendInfo(ctx context.Context, userId *int64, friendId *int64) (*Friend, error)
 }
 
 type FriendDaoImpl struct {
@@ -91,7 +91,7 @@ func (dao FriendDaoImpl) QueryFriendList(ctx context.Context, userId int64) ([]*
 	return friends, nil
 }
 
-func (dao FriendDaoImpl) QueryFriendInfo(ctx context.Context, userId int64, friendId int64) (*Friend, error) {
+func (dao FriendDaoImpl) QueryFriendInfo(ctx context.Context, userId *int64, friendId *int64) (*Friend, error) {
 	var sql = fmt.Sprintf("select %s from %s where user_id = ? and friend_id = ?", friendColumns, friendTableName)
 	one, err := dao.DatabaseTpl.FindOne(ctx, sql, Friend{}, userId, friendId)
 	if err != nil || one == nil {
