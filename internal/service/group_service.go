@@ -133,7 +133,14 @@ func (service GroupService) SendMsgToGroup(ctx *gin.Context, cmd *GroupMemberSen
 		return false, apierror.WhenParamError(fmt.Errorf("你不在该群组中"))
 	}
 
-	// TODO: send msg to group
+	groupMembers, err := service.groupMemberDao.FindByGroupId(ctx2, cmd.GroupId)
+	if len(groupMembers) <= 0 {
+		return false, apierror.WhenParamError(fmt.Errorf("群组中没有用户"))
+	}
+
+	for _, member := range groupMembers {
+		SendMsg(&cmd.UserId, &member.UserId, &cmd.Msg)
+	}
 	return false, nil
 }
 
