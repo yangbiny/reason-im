@@ -139,7 +139,14 @@ func (service GroupService) SendMsgToGroup(ctx *gin.Context, cmd *GroupMemberSen
 	}
 
 	for _, member := range groupMembers {
-		SendMsg(&cmd.UserId, &member.UserId, &cmd.Msg)
+		msg := Msg{
+			MsgType:    1,
+			Msg:        cmd.Msg,
+			FromUserId: cmd.UserId,
+			ToId:       cmd.GroupId,
+			Ext:        "",
+		}
+		SendMsg(&member.UserId, &msg)
 	}
 	return false, nil
 }

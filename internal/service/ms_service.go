@@ -16,9 +16,11 @@ var magicGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 var UserHubs = make(map[int64]*Hub)
 
 type Msg struct {
-	ToUserId   int64  `json:"to_user_id" validate:"required"`
-	FromUserId int64  `json:"from_user_id" validate:"required"`
-	Msg        string `json:"msg" validate:"required"`
+	ToId       int64       `json:"to_id" validate:"required"`
+	FromUserId int64       `json:"from_user_id" validate:"required"`
+	Msg        string      `json:"msg" validate:"required"`
+	MsgType    int         `json:"msg_type" validate:"required"`
+	Ext        interface{} `json:"ext"`
 }
 
 type Client struct {
@@ -120,16 +122,11 @@ func ServeWs(c *gin.Context, cmd *MessageCmd) (bool, *apierror.ApiError) {
 	return true, nil
 }
 
-func SendMsg(fromUserId, receiverId *int64, msg *string) {
+func SendMsg(receiverId *int64, msg *Msg) {
 	hub := UserHubs[*receiverId]
 	if hub == nil {
 		return
 	}
-	msgStruct := Msg{
-		ToUserId:   *receiverId,
-		FromUserId: *fromUserId,
-		Msg:        *msg,
-	}
-	marshal, _ := json.Marshal(msgStruct)
+	marshal, _ := json.Marshal(msg)
 	hub.write <- marshal
 }
