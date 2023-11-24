@@ -62,10 +62,9 @@ func (msgService *MsgService) sendMsgToGroup(c *gin.Context, cmd *MsgCmd) (bool,
 		return false, apierror.WhenServiceError(err)
 	}
 	go func() {
-		msgType := int(model.MsgTypeGroup)
 		for _, member := range allGroupMembers {
 			SendMsg(&member.UserId, &Msg{
-				MsgType:    &msgType,
+				MsgType:    model.MsgTypeGroup,
 				ToId:       &member.UserId,
 				FromUserId: cmd.UserId,
 				Msg:        cmd.Msg,
@@ -84,9 +83,8 @@ func (msgService *MsgService) sendMsgToFriend(c *gin.Context, cmd *MsgCmd) (bool
 	if friendInfo == nil {
 		return false, apierror.WhenParamError(fmt.Errorf("他还不是你的朋友"))
 	}
-	msgType := int(model.MsgTypeFriend)
 	SendMsg(friendId, &Msg{
-		MsgType:    &msgType,
+		MsgType:    model.MsgTypeFriend,
 		ToId:       friendId,
 		Msg:        cmd.Msg,
 		FromUserId: cmd.UserId,

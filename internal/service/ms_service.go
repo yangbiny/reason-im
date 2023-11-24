@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 	apierror "github.com/yangbiny/reason-commons/err"
 	"reason-im/internal/utils/logger"
+	"reason-im/pkg/model"
 )
 
 var magicGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -16,11 +17,11 @@ var magicGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 var UserHubs = make(map[int64]*Hub)
 
 type Msg struct {
-	ToId       *int64       `json:"to_id" validate:"required"`
-	FromUserId *int64       `json:"from_user_id" validate:"required"`
-	Msg        *string      `json:"msg" validate:"required"`
-	MsgType    *int         `json:"msg_type" validate:"required"`
-	Ext        *interface{} `json:"ext"`
+	ToId       *int64        `json:"to_id" validate:"required"`
+	FromUserId *int64        `json:"from_user_id" validate:"required"`
+	Msg        *string       `json:"msg" validate:"required"`
+	MsgType    model.MsgType `json:"msg_type" validate:"required"`
+	Ext        *interface{}  `json:"ext"`
 }
 
 type Client struct {
