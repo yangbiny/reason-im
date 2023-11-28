@@ -7,6 +7,7 @@ const (
 	MsgTypeFriend MsgType = iota
 	// MsgTypeGroup 2. 群组消息
 	MsgTypeGroup
+	MsgTypeSub
 )
 
 func CheckIsMsgType(msgType int32) bool {

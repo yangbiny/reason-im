@@ -3,8 +3,18 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"reason-im/internal/utils/token"
+	"reason-im/pkg/model"
 )
+
+type SubService struct {
+	msgService MsgService
+}
+
+func NewSubService(msgService MsgService) SubService {
+	return SubService{msgService: msgService}
+}
 
 var channelMap map[string]*[]subChannel
 
@@ -12,13 +22,15 @@ func init() {
 	channelMap = make(map[string]*[]subChannel)
 }
 
+const sendUserId int64 = 2
+
 type subChannel struct {
 	ChannelId string
 	UserId    int64
 }
 
 // ApplySubToken 申请订阅的 token
-func ApplySubToken(channel string, userId int64) (*string, error) {
+func (subService *SubService) ApplySubToken(channel string, userId int64) (*string, error) {
 	// 可以在这里验证用户是否有权限订阅
 	claims := map[string]string{}
 	claims["channel"] = claims[channel]
@@ -29,7 +41,7 @@ func ApplySubToken(channel string, userId int64) (*string, error) {
 	return applyToken, nil
 }
 
-func SubChannel(channel string, userId int64, tokenStr *string) error {
+func (subService *SubService) SubChannel(channel string, userId int64, tokenStr *string) error {
 	// 验证 token 是否合法
 	parseToken, err := token.ParseToken(context.Background(), *tokenStr)
 	if err != nil {
@@ -48,7 +60,7 @@ func SubChannel(channel string, userId int64, tokenStr *string) error {
 }
 
 // UnSubChannel 取消订阅
-func UnSubChannel(channel string, userId int64) {
+func (subService *SubService) UnSubChannel(channel string, userId int64) {
 	channels := *channelMap[channel]
 	for i, subChannel := range channels {
 		if subChannel.UserId == userId {
@@ -59,6 +71,15 @@ func UnSubChannel(channel string, userId int64) {
 }
 
 // SendMsgToChannel 发送消息到频道。订阅者 可以在消息 发送后，接受到发送的消息
-func SendMsgToChannel(channel string, msg string) {
-
+func (subService *SubService) SendMsgToChannel(ctx *gin.Context, channel string, msg string) {
+	channels := *channelMap[channel]
+	var senderUser = sendUserId
+	for _, item := range channels {
+		SendMsg(&item.UserId, &Msg{
+			MsgType:    model.MsgTypeSub,
+			ToId:       &item.UserId,
+			Msg:        &msg,
+			FromUserId: &senderUser,
+		})
+	}
 }
