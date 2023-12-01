@@ -59,6 +59,14 @@ func NewGinRouter() *gin.Engine {
 		imMsgGroup.POST("/send/", onEvent(new(service2.MsgCmd), service.SendMsg))
 	}
 
+	subService := reasonim.InitSubService()
+	engine.Group("/sub/", web.Authorize())
+	{
+		/*engine.POST("/sub/", onEvent(new(service2.), subService.Sub))
+		engine.POST("/sub/cancel/", onEvent(new(service2.SubCmd), subService.CancelSub))
+		engine.POST("/sub/query/", onEvent(new(service2.SubCmd), subService.QuerySub))*/
+	}
+
 	ws := engine.Group("/ws/", web.Authorize())
 	{
 		ws.GET("connect/", onEvent(new(service2.MessageCmd), service2.ServeWs))

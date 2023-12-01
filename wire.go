@@ -59,7 +59,21 @@ func InitMsgService() service2.MsgService {
 	wire.Build(
 		service2.NewMsgService,
 		repo.NewFriendDao,
+		repo.NewGroupMemberDao,
+		repo.NewGroupDao,
 		wire.Value(tpl),
 	)
 	return service2.MsgService{}
+}
+
+func InitSubService() service2.SubService {
+	wire.Build(
+		service2.NewSubService,
+		service2.NewMsgService,
+		repo.NewFriendDao,
+		repo.NewGroupMemberDao,
+		repo.NewGroupDao,
+		wire.Value(tpl),
+	)
+	return service2.SubService{}
 }

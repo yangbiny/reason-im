@@ -68,12 +68,28 @@ var (
 func InitMsgService() service.MsgService {
 	databaseTpl := _wireDatabaseTplValue4
 	friendDao := repo.NewFriendDao(databaseTpl)
-	msgService := service.NewMsgService(friendDao)
+	groupDao := repo.NewGroupDao(databaseTpl)
+	groupMemberDao := repo.NewGroupMemberDao(databaseTpl)
+	msgService := service.NewMsgService(friendDao, groupDao, groupMemberDao)
 	return msgService
 }
 
 var (
 	_wireDatabaseTplValue4 = tpl
+)
+
+func InitSubService() service.SubService {
+	databaseTpl := _wireDatabaseTplValue5
+	friendDao := repo.NewFriendDao(databaseTpl)
+	groupDao := repo.NewGroupDao(databaseTpl)
+	groupMemberDao := repo.NewGroupMemberDao(databaseTpl)
+	msgService := service.NewMsgService(friendDao, groupDao, groupMemberDao)
+	subService := service.NewSubService(msgService)
+	return subService
+}
+
+var (
+	_wireDatabaseTplValue5 = tpl
 )
 
 // wire.go:
