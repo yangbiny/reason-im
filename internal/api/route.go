@@ -62,7 +62,7 @@ func NewGinRouter() *gin.Engine {
 	subService := reasonim.InitSubService()
 	subServiceGroup := engine.Group("/sub/", web.Authorize())
 	{
-		subServiceGroup.POST("/apply/token.", onEvent(new(service2.ApplyTokenReq), subService.ApplySubToken))
+		subServiceGroup.POST("/apply/token/", onEvent(new(service2.ApplyTokenReq), subService.ApplySubToken))
 		subServiceGroup.POST("/sub/cancel/", onEvent(new(service2.SubChannelReq), subService.SubChannel))
 		subServiceGroup.POST("/sub/query/", onEvent(new(service2.UnSubChannelReq), subService.UnSubChannel))
 	}
