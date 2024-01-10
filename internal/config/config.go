@@ -29,9 +29,10 @@ func withTagName(tag string) viper.DecoderConfigOption {
 
 func init() {
 	viper.SetConfigType("yaml")
-	viper.SetConfigFile("/Users/knowreason/object/admin/reason-im/config/config.yaml")
+	viper.SetConfigName("config")
+	viper.AddConfigPath("config")
 	if err := viper.ReadInConfig(); err != nil {
-		panic("读取配置文件失败")
+		panic(err)
 	}
 	opts := []viper.DecoderConfigOption{
 		withTagName("yaml"),
